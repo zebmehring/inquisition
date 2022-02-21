@@ -9,12 +9,12 @@ class ContextQueryAttention(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, n, m, h):
+    def __init__(self, embedding_dim):
         super(ContextQueryAttention, self).__init__()
-        self.W = torch.nn.Parameter(torch.empty(n, m, h))
+        self.W = torch.nn.Parameter(torch.empty(embedding_dim))
 
     def similarity(self, context, query):
-        return self.W @ torch.cat((context, query, context * query))
+        return torch.cat((context, query, torch.einsum('bnd,bmd->bnmd', context, query)), dim=-1) @ self.W
 
     def forward(self, context, query):
         similarity = self.similarity(context, query)
