@@ -49,13 +49,18 @@ class QANet(nn.Module):
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
 
-    def forward(self, cw_idxs, qw_idxs):
+    def forward(self, cw_idxs, cc_idxs, qw_idxs, qc_idxs):
+
+        # note: we don't need to change the masking below.
+        # the rason is that that masking is used for the attentino computation.
+        # the character level embeddings have nothing to do with the attention computation,
+        # do we don't need to adjust the masking.
         c_mask = torch.zeros_like(cw_idxs) != cw_idxs
         q_mask = torch.zeros_like(qw_idxs) != qw_idxs
         c_len, q_len = c_mask.sum(-1), q_mask.sum(-1)
 
-        c_emb = self.emb(cw_idxs)         # (batch_size, c_len, hidden_size)
-        q_emb = self.emb(qw_idxs)         # (batch_size, q_len, hidden_size)
+        c_emb = self.emb((cw_idxs, cc_idxs))         # (batch_size, c_len, hidden_size)
+        q_emb = self.emb((qw_idxs, qc_idxs))         # (batch_size, q_len, hidden_size)
 
         c_enc = self.enc(c_emb, c_len)    # (batch_size, c_len, 2 * hidden_size)
         q_enc = self.enc(q_emb, q_len)    # (batch_size, q_len, 2 * hidden_size)

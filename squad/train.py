@@ -17,7 +17,7 @@ import util
 from args import get_train_args
 from collections import OrderedDict
 from json import dumps
-from models import BiDAF
+from models import BiDAF, QANet
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from ujson import load as json_load
@@ -43,12 +43,19 @@ def main(args):
     # Get embeddings
     log.info('Loading embeddings...')
     word_vectors = util.torch_from_json(args.word_emb_file)
+    chararacter_vectors = util.torch_from_json(args.char_emb_file)
 
     # Get model
     log.info('Building model...')
+    """
     model = BiDAF(word_vectors=word_vectors,
                   hidden_size=args.hidden_size,
                   drop_prob=args.drop_prob)
+    """
+    model = QANet(word_vectors = word_vectors,
+                  chararacter_vectors = chararacter_vectors,
+                  hidden_size = args.hidden_size,
+                  drop_prob = args.drop_prob)
     model = nn.DataParallel(model, args.gpu_ids)
     if args.load_path:
         log.info(f'Loading checkpoint from {args.load_path}...')
@@ -87,6 +94,12 @@ def main(args):
                                  collate_fn=collate_fn)
 
     # Train
+    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
+
+
+
+def train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver,
+          char_embeddings=False):
     log.info('Training...')
     steps_till_eval = args.eval_steps
     epoch = step // len(train_dataset)
@@ -107,8 +120,17 @@ def main(args):
                 batch_size = cw_idxs.size(0)
                 optimizer.zero_grad()
 
+                if char_embeddings:
+                    cc_idxs = cc_idxs.to(device)
+                    qc_idxs = qc_idxs.to(device)
+
                 # Forward
-                log_p1, log_p2 = model(cw_idxs, qw_idxs)
+                log_p1 = None
+                log_p2 = None
+                if char_embeddings:
+                    log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
+                else:
+                    log_p1, log_p2 = model(cw_idxs, qw_idxs)
                 y1, y2 = y1.to(device), y2.to(device)
                 loss = F.nll_loss(log_p1, y1) + F.nll_loss(log_p2, y2)
                 loss_val = loss.item()

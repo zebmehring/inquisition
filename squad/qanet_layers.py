@@ -26,7 +26,7 @@ class Embedding(nn.Module):
         self.drop_prob = drop_prob
         self.char_embed = nn.Embedding.from_pretrained(character_vectors)
         self.word_embed = nn.Embedding.from_pretrained(word_vectors)
-        self.conv1d = nn.Conv1d(in_channels=character_vectors.shape[-1], out_channels=hidden_size // 2, kernel_size=None) # not sure on kernel size
+        self.conv1d = nn.Conv1d(in_channels=character_vectors.shape[-1], out_channels=hidden_size // 2, kernel_size=3) # not sure on kernel size
         self.proj = nn.Linear(word_vectors.size(1), hidden_size//2, bias=False)
         self.hwy = HighwayEncoder(2, hidden_size)
 
