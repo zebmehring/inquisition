@@ -96,6 +96,11 @@ def main(args):
         with torch.enable_grad(), \
                 tqdm(total=len(train_loader.dataset)) as progress_bar:
             for cw_idxs, cc_idxs, qw_idxs, qc_idxs, y1, y2, ids in train_loader:
+                # ADD IN CHARACTER EMBEDDINGS HERE!!!!
+                # BASICALLY, WE CAN LOAD THE PRETRAIEND VECTORS ABOVE AND PASS THEM TO TEH MODEL
+                # BUT, HERE IS WHERE WE WILL ACTUALLY GET THE INDINCES FOR THE CHARS AND PASS THEM IN
+
+
                 # Setup for forward
                 cw_idxs = cw_idxs.to(device)
                 qw_idxs = qw_idxs.to(device)
