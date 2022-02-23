@@ -65,6 +65,8 @@ class EncoderBlock(torch.nn.Module):
 
         self.ff = torch.nn.Linear(
             in_features=hidden_size, out_features=hidden_size, bias=True)
+	# there's another weight plus bias multipliation. (See page 5 of Attention is All You Need).
+        self.ff2 = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=True)
 
     def forward(self, x):
         """
@@ -98,6 +100,7 @@ class EncoderBlock(torch.nn.Module):
         residual = output
         output = self.layer_norm(output)
         output = relu(self.ff(output))
+        output = self.ff2(output)
         output += residual
 
         return output

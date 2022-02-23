@@ -49,7 +49,7 @@ class QANet(nn.Module):
                                          drop_prob=drop_prob)
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
-                                     num_convs=4,
+                                     num_convs=7,
                                      num_attn_heads=1)
 
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
