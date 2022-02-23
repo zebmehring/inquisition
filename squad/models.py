@@ -25,10 +25,13 @@ class QANet(nn.Module):
 
     Args:
         word_vectors (torch.Tensor): Pre-trained word vectors.
+        character_vectors (torch.Tensor): Pre-trained character vectors
         hidden_size (int): Number of features in the hidden state at each layer.
         drop_prob (float): Dropout probability.
+        num_enc_blocks(list[int]): a two element list giving the number of times to apply the encoder blocks
+					for the embedding encoder layer and model encoder layer, respectively
     """
-    def __init__(self, word_vectors, character_vectors, hidden_size, drop_prob=0.):
+    def __init__(self, word_vectors, character_vectors, hidden_size, drop_prob=0., num_enc_blocks=[1,7]):
         super(QANet, self).__init__()
         self.emb = qanet_layers.Embedding(word_vectors=word_vectors,
                                     character_vectors = character_vectors,
@@ -55,6 +58,8 @@ class QANet(nn.Module):
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
 
+        self.num_enc_blocks = [1,7]
+
     def forward(self, cw_idxs, cc_idxs, qw_idxs, qc_idxs):
 
         # note: we don't need to change the masking below.
@@ -73,8 +78,9 @@ class QANet(nn.Module):
 	# I'm going to ask in office hours about this. It's not clear to me how to do this.
 	# since we're appling convoluations first, not sure 
 
-        c_enc = self.enc(c_emb)    # (batch_size, c_len, 2 * hidden_size)
-        q_enc = self.enc(q_emb)    # (batch_size, q_len, 2 * hidden_size)
+        for i in range(self.num_enc_blocks[0]):
+            c_enc = self.enc(c_emb)    # (batch_size, c_len, 2 * hidden_size)
+            q_enc = self.enc(q_emb)    # (batch_size, q_len, 2 * hidden_size)
  
         # FOR TESTING PURPOSES!!!
         #c_enc = torch.cat((c_enc, c_enc), dim=-1)
@@ -83,7 +89,8 @@ class QANet(nn.Module):
         att = self.att(c_enc, q_enc,
                        c_mask, q_mask)    # (batch_size, c_len, 8 * hidden_size)
 
-        mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
+        for i in range(self.num_enc_blocks[1]):
+            mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 
