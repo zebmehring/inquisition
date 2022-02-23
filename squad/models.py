@@ -104,7 +104,7 @@ class QANet(nn.Module):
         for i in range(self.num_enc_blocks[1]):
             mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
         """
-        mod = self.mod(att)
+        mod = self.mod(att, c_len)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 

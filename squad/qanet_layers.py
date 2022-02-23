@@ -33,13 +33,20 @@ class ContextQueryAttention(torch.nn.Module):
             nn.init.xavier_uniform_(weight)
         self.bias = nn.Parameter(torch.zeros(1))
 
-    def forward(self, context, query):
-        pdb.set_trace()
-        S = self.get_similarity_matrix(context, query)
-        S_bar = softmax(S, dim=1)
-        S_bar_bar = softmax(S, dim=2)
-        A = torch.bmm(S, query.transpose(-1,-2))
-        B = torch.bmm(torch.bmm(S_bar, S_bar_bar.transpose(-1,-2)), context.transpose(-1,-2))
+    def forward(self, context, query, c_mask, q_mask):
+        """
+        :param context: shape (batch_size, max_content_length, hidden_size)
+        :param query: shape (batch_size, max_query_length, hidden_size)
+        the masks just tell you where the cs and qs are masked. (e.g., if q[1][9] -- the 9th word in the second query in this batch -- is True, then taht means that that word is masked for that query.)
+
+ 	NOTE!!! VERY VERY VERY important!!!! WE HAVE TO FIGURE OUT HOW TO DEAL WITH MASKING!! SAME FOR ENCODER BLOCK!!!
+        That may actually be why the EncoderBlock isn't working!
+        """
+        S = self.get_similarity_matrix(context, query)# shape (batch_size, max_context_length, max-query_length)
+        S_bar = softmax(S, dim=1) # shape batch_size, context_length, max_query_elngth
+        S_bar_bar = softmax(S, dim=2) # shape batch_size, max_context_length, max_query_length
+        A = torch.bmm(S, query) 
+        B = torch.bmm(torch.bmm(S_bar, S_bar_bar.transpose(-1,-2)), context)
 
         output = torch.cat([context, A, context * A, context * B], dim=2)  # (bs, c_len, 4 * hid_size)
         return output
@@ -58,8 +65,8 @@ class ContextQueryAttention(torch.nn.Module):
         q = F.dropout(q, self.drop_prob, self.training)  # (bs, q_len, hid_size)
 
         s0 = torch.matmul(c, self.c_weight).expand([-1, -1, q_len])
-        s1 = torch.matmul(q, self.q_weight).transpose(1, 2) \
-            .expand([-1, c_len, -1])
+        s1 = torch.matmul(q, self.q_weight).transpose(1, 2)\
+                                           .expand([-1, c_len, -1])
         s2 = torch.matmul(c * self.cq_weight, q.transpose(1, 2))
         s = s0 + s1 + s2 + self.bias
 
