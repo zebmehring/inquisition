@@ -17,6 +17,56 @@ from torch.nn.functional import softmax
 import pdb
 
 
+class ContextQueryAttention(torch.nn.Module):
+    """Context-query attention subnetwork, as described in the QANet paper.
+
+    See https://arxiv.org/pdf/1804.09541.pdf for more details.
+    """
+
+    def __init__(self, hidden_size, drop_prob):
+        super(ContextQueryAttention, self).__init__()
+        self.drop_prob = drop_prob
+        self.c_weight = nn.Parameter(torch.zeros(hidden_size, 1))
+        self.q_weight = nn.Parameter(torch.zeros(hidden_size, 1))
+        self.cq_weight = nn.Parameter(torch.zeros(1, 1, hidden_size))
+        for weight in (self.c_weight, self.q_weight, self.cq_weight):
+            nn.init.xavier_uniform_(weight)
+        self.bias = nn.Parameter(torch.zeros(1))
+
+    def forward(self, context, query):
+        pdb.set_trace()
+        S = self.get_similarity_matrix(context, query)
+        S_bar = softmax(S, dim=1)
+        S_bar_bar = softmax(S, dim=2)
+        A = torch.bmm(S, query.transpose(-1,-2))
+        B = torch.bmm(torch.bmm(S_bar, S_bar_bar.transpose(-1,-2)), context.transpose(-1,-2))
+
+        output = torch.cat([context, A, context * A, context * B], dim=2)  # (bs, c_len, 4 * hid_size)
+        return output
+
+    def get_similarity_matrix(self, c, q):
+        """
+        Note: we got this from the BiDAF implementation.
+        The reason this works is that the similarity function used by BiDAF and QANet
+        is the exact same.
+
+        See Also:
+            Equation 1 in https://arxiv.org/abs/1611.01603
+        """
+        c_len, q_len = c.size(1), q.size(1)
+        c = F.dropout(c, self.drop_prob, self.training)  # (bs, c_len, hid_size)
+        q = F.dropout(q, self.drop_prob, self.training)  # (bs, q_len, hid_size)
+
+        s0 = torch.matmul(c, self.c_weight).expand([-1, -1, q_len])
+        s1 = torch.matmul(q, self.q_weight).transpose(1, 2) \
+            .expand([-1, c_len, -1])
+        s2 = torch.matmul(c * self.cq_weight, q.transpose(1, 2))
+        s = s0 + s1 + s2 + self.bias
+
+        return s
+
+
+
 
 class SelfAttention(torch.nn.Module):
     """

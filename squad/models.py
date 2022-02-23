@@ -49,7 +49,7 @@ class QANet(nn.Module):
                                              num_attn_heads=8)
         """
 
-        self.att = layers.BiDAFAttention(hidden_size=2*hidden_size,
+        self.att = qanet_layers.ContextQueryAttention(hidden_size=2*hidden_size,
                                          drop_prob=drop_prob)
 
         """
