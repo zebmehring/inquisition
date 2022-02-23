@@ -45,13 +45,12 @@ class QANet(nn.Module):
                                              num_convs=4,
                                              num_attn_heads=1)
 
-        self.att = layers.BiDAFAttention(hidden_size=2 * hidden_size,
+        self.att = layers.BiDAFAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
 
-        self.mod = layers.RNNEncoder(input_size=8 * hidden_size,
-                                     hidden_size=hidden_size,
-                                     num_layers=2,
-                                     drop_prob=drop_prob)
+        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
+                                     num_convs=4,
+                                     num_attn_heads=1)
 
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
@@ -84,7 +83,7 @@ class QANet(nn.Module):
         att = self.att(c_enc, q_enc,
                        c_mask, q_mask)    # (batch_size, c_len, 8 * hidden_size)
 
-        mod = self.mod(att, c_len)        # (batch_size, c_len, 2 * hidden_size)
+        mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 
