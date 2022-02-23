@@ -1,6 +1,6 @@
 import numpy as np
 
-SIZE_OF_SMALLER_TRAIN_SET = 1000
+SIZE_OF_SMALLER_TRAIN_SET = 3 #100 #3 #1000
 
 
 
