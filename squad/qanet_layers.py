@@ -16,6 +16,55 @@ from torch.nn.functional import softmax
 
 import pdb
 
+
+
+class SelfAttention(torch.nn.Module):
+    """
+    SelfAttention as described in Attention is All You Need.
+    """
+    def __init__(self, hidden_size, num_attn_heads):
+        """
+
+        :param hidden_size (int): hidden size of input
+        :param num_attn_heads (int): the number of attention heads
+        """
+        self.num_attn_heads = num_attn_heads
+
+        self.Qs = ModuleList([torch.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, bias=False)
+        for _ in range(num_attn_heads)])
+        self.Ks = ModuleList([torch.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, bias=False)
+                              for _ in range(num_attn_heads)])
+        self.Vs = ModuleList([torch.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, bias=False)
+                              for _ in range(num_attn_heads)])
+
+        self.proj = nn.Linear(in_features = num_attn_heads * hidden_size,
+                              out_features = hidden_size, bias=False)
+
+
+    def forward(self, x):
+        """
+
+        :param x: has shape (batch_size, seq_len, hidden_size)
+        :return:
+        """
+        attention_outputs = None
+        for i in range(self.num_attn_heads):
+            attention_scores = softmax(torch.bmm(self.Qs[i](output), self.Ks[i](output).transpose(-1, -2) /
+                                                 torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32))))
+            output = torch.bmm(attention_scores, self.Vs[i](output))
+            if attention_outputs is None:
+                attention_outputs = output
+            else:
+                attention_outputs = torch.cat((attention_outputs, output), dim=-1)
+
+        output = self.proj(attention_outputs)
+
+        return output
+
+
 class EncoderBlock(torch.nn.Module):
     """Encoder block subnetwork, as described in the QANet paper.
 
@@ -55,13 +104,8 @@ class EncoderBlock(torch.nn.Module):
         
         self.layer_norm = nn.LayerNorm(normalized_shape=hidden_size)
 
-        # TODO: Support multi-headed attention
-        self.Q = torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-        self.K = torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-        self.V = torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
+        self.att = SelfAttention(hidden_size, num_attn_heads)
+
 
         self.ff = torch.nn.Linear(
             in_features=hidden_size, out_features=hidden_size, bias=True)
@@ -92,9 +136,7 @@ class EncoderBlock(torch.nn.Module):
         # recall that self.Q(output) has shape (batch_size, seq_len. hidden_size) and same for self.K(output) and V(outupt)
 	# for this reason, we ahve to use bmm instead of regular matrix multplication and we also have to transpose
 	# the non-batch dimensions
-        attention_scores = softmax(torch.bmm(self.Q(output), self.K(output).transpose(-1,-2) /
-                         torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32)))) 
-        output = torch.bmm(attention_scores, self.V(output))
+        output = self.att(output)
         output += residual
 
         residual = output
