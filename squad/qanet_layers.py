@@ -27,14 +27,15 @@ class PositionEncoder(torch.nn.Module):
         super(PositionEncoder, self).__init__()
 
 
-        freq_indices = torch.arange(hidden_size//2).repeat_interleave(2)
+        freq_indices = torch.arange(hidden_size//2)#.repeat_interleave(2)
         frequencies = torch.pow(10000, (2*freq_indices)/hidden_size)
 
 
         #frequencies = torch.pow(10000, 2 * ((hidden_size // 2) / )
 
         positions = torch.arange(max_seq_len).reshape(-1, 1)
-        positions = torch.tile(positions, (1, hidden_size // 2)) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
+        positions = positions.repeat(1, hidden_size // 2) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
+
 
         self.position_encodings = torch.zeros((max_seq_len, hidden_size))
 
@@ -45,12 +46,12 @@ class PositionEncoder(torch.nn.Module):
     def forward(self, x):
         """
 
-        :param x: tensor with shape (seq_len, hidden_size)
+        :param x: tensor with shape (batch_size, seq_len, hidden_size)
         :return:
         """
         # note that we only get the first seq_len position encodings (since max_seq_len
         # may be greater than seq_len)
-        return self.position_encodings[:x.shape[0]] + x
+        return self.position_encodings[:x.shape[1]] + x
 
 
 
@@ -73,6 +74,8 @@ class Embedding(nn.Module):
         self.conv1d = nn.Conv1d(in_channels=character_vectors.shape[-1], out_channels=hidden_size // 2, kernel_size=3, padding=1) # not sure on kernel size
         self.proj = nn.Linear(word_vectors.size(1), hidden_size//2, bias=False)
         self.hwy = HighwayEncoder(2, hidden_size)
+
+        # self.test = PositionEncoder(hidden_size)
 
     def forward(self, x):
         """
@@ -109,5 +112,7 @@ class Embedding(nn.Module):
         emb = torch.cat((word_emb, char_emb), dim=2) # (batch_size, seq_len, hidden_size)
 
         emb = self.hwy(emb)   # (batch_size, seq_len, hidden_size)
+  
+        # emb = self.test(emb)
 
         return emb
