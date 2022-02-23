@@ -175,6 +175,12 @@ class BiDAFAttention(nn.Module):
         c = F.dropout(c, self.drop_prob, self.training)  # (bs, c_len, hid_size)
         q = F.dropout(q, self.drop_prob, self.training)  # (bs, q_len, hid_size)
 
+        #pdb.set_trace()
+        # Note to self: the BIDAF model is epxecting c \in (batch_size, seq_len, 2*hidden_size), where hidden_size
+	# is the hidden_size passed to the ender.
+	# the reason is that they do forward and backward RNN encoding and then concatenate the two final hidden layers
+	# and so their encoder outputs something that is 2 times the hidden_size in that case
+	# QANet does not do this.
         # Shapes: (batch_size, c_len, q_len)
         s0 = torch.matmul(c, self.c_weight).expand([-1, -1, q_len])
         s1 = torch.matmul(q, self.q_weight).transpose(1, 2)\
