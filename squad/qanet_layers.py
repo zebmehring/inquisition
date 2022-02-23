@@ -10,6 +10,48 @@ import pdb
 
 
 
+class PositionEncoder(torch.nn.Module):
+    def __init__(self, hidden_size, max_seq_len=1000):
+        """
+
+        :param hidden_size: the dimensionality of the input
+        :param max_seq_len (int): the maximum sequence length that needs to be positionally
+         encoded. I set it 1000 because this value will really be the maximum of
+         args.quest_limit, args.para_limit, args.test_quest_limit, args.test_para_limit
+         (since those are sequences which will be encoded: the question and context vectors)
+
+         We want to compute the position encoding p_t for all t \in 0, ..., max_seq_len.
+         Note that each p_t has shape (hidden_size)
+         and so position_encodings will have shape (max_seq_len, hidden_size)
+        """
+        super(PositionEncoder, self).__init__()
+
+
+        freq_indices = torch.arange(hidden_size//2).repeat_interleave(2)
+        frequencies = torch.pow(10000, (2*freq_indices)/hidden_size)
+
+
+        #frequencies = torch.pow(10000, 2 * ((hidden_size // 2) / )
+
+        positions = torch.arange(max_seq_len).reshape(-1, 1)
+        positions = torch.tile(positions, (1, hidden_size // 2)) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
+
+        self.position_encodings = torch.zeros((max_seq_len, hidden_size))
+
+
+        self.position_encodings[:, 0::2] = torch.sin(positions / frequencies)
+        self.position_encodings[:, 1::2] = torch.cos(positions / frequencies)
+
+    def forward(self, x):
+        """
+
+        :param x: tensor with shape (seq_len, hidden_size)
+        :return:
+        """
+        # note that we only get the first seq_len position encodings (since max_seq_len
+        # may be greater than seq_len)
+        return self.position_encodings[:x.shape[0]] + x
+
 
 
 class Embedding(nn.Module):
