@@ -43,7 +43,7 @@ class QANet(nn.Module):
         """
         self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size,
                                              num_convs=4,
-                                             num_attn_heads=1)
+                                             num_attn_heads=8)
 
         self.att = layers.BiDAFAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)

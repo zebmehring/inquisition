@@ -28,7 +28,9 @@ class SelfAttention(torch.nn.Module):
         :param hidden_size (int): hidden size of input
         :param num_attn_heads (int): the number of attention heads
         """
+        super(SelfAttention, self).__init__()
         self.num_attn_heads = num_attn_heads
+        self.hidden_size = hidden_size
 
         self.Qs = ModuleList([torch.nn.Linear(
             in_features=hidden_size, out_features=hidden_size, bias=False)
@@ -52,9 +54,9 @@ class SelfAttention(torch.nn.Module):
         """
         attention_outputs = None
         for i in range(self.num_attn_heads):
-            attention_scores = softmax(torch.bmm(self.Qs[i](output), self.Ks[i](output).transpose(-1, -2) /
+            attention_scores = softmax(torch.bmm(self.Qs[i](x), self.Ks[i](x).transpose(-1, -2) /
                                                  torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32))))
-            output = torch.bmm(attention_scores, self.Vs[i](output))
+            output = torch.bmm(attention_scores, self.Vs[i](x))
             if attention_outputs is None:
                 attention_outputs = output
             else:
