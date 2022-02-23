@@ -11,6 +11,8 @@ import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from util import masked_softmax
 
+import pdb
+
 
 class Embedding(nn.Module):
     """Embedding layer used by BiDAF, without the character-level component.

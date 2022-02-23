@@ -16,8 +16,6 @@ from torch.nn.functional import softmax
 
 import pdb
 
-
-
 class EncoderBlock(torch.nn.Module):
     """Encoder block subnetwork, as described in the QANet paper.
 
@@ -44,12 +42,18 @@ class EncoderBlock(torch.nn.Module):
         """
         super(EncoderBlock, self).__init__()
 
+        self.position_encoder = PositionEncoder(hidden_size)
+        
         self.hidden_size = hidden_size
 
-        self.position_encoder = PositionEncoder(self.hidden_size)
-
-        self.convs = ModuleList([Conv2d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=7)
+        # Note: we set padding=3 below to maintain the dimensionality of the input
+	# We get this using the equation for L_out given in conv1d documentation
+	# othewise, each conv operation would reduce dimensionality of the input, which is probably not desirable
+	# since we would no longer have one vector per index in the sequence.
+        self.convs = ModuleList([nn.Conv1d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=7, padding=3)
                                  for _ in range(num_convs)])
+        
+        self.layer_norm = nn.LayerNorm(normalized_shape=hidden_size)
 
         # TODO: Support multi-headed attention
         self.Q = torch.nn.Linear(
@@ -63,22 +67,36 @@ class EncoderBlock(torch.nn.Module):
             in_features=hidden_size, out_features=hidden_size, bias=True)
 
     def forward(self, x):
-        output = self.position_encoder(x)
+        """
+
+        :param x: tensor with shape (batch_size, seq_len, hidden_size)
+        :return:
+
+        TODO!
+
+        """
+        output = self.position_encoder(x) # (batch_size, seq_len, hidden_size)
 
         for conv in self.convs:
             residual = output
-            output = layer_norm(output, normalized_shape=self.hidden_size)
-            output = conv(output)
+            output = self.layer_norm(output)
+            output = conv(output.transpose(-1,-2)) # by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
+            output = output.transpose(-1,-2) # now, just tranpoase it back to (batch_size, seq_len, hidden_size)
             output += residual
 
         residual = output
-        output = layer_norm(output, normalized_shape=self.hidden_size)
-        output = softmax(self.Q(output) @ self.K(output).T /
-                         torch.sqrt(self.hidden_size)) @ self.V(output)
+        output = self.layer_norm(output) # (batch_size, seq_len, hidden_size)
+
+        # recall that self.Q(output) has shape (batch_size, seq_len. hidden_size) and same for self.K(output) and V(outupt)
+	# for this reason, we ahve to use bmm instead of regular matrix multplication and we also have to transpose
+	# the non-batch dimensions
+        attention_scores = softmax(torch.bmm(self.Q(output), self.K(output).transpose(-1,-2) /
+                         torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32)))) 
+        output = torch.bmm(attention_scores, self.V(output))
         output += residual
 
         residual = output
-        output = layer_norm(output, normalized_shape=self.hidden_size)
+        output = self.layer_norm(output)
         output = relu(self.ff(output))
         output += residual
 

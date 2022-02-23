@@ -9,6 +9,8 @@ import qanet_layers
 import torch
 import torch.nn as nn
 
+import pdb
+
 
 class QANet(nn.Module):
     """QANet model for SQuAD.
@@ -67,8 +69,13 @@ class QANet(nn.Module):
         c_emb = self.emb((cw_idxs, cc_idxs))         # (batch_size, c_len, hidden_size)
         q_emb = self.emb((qw_idxs, qc_idxs))         # (batch_size, q_len, hidden_size)
 
-        c_enc = self.enc(c_emb, c_len)    # (batch_size, c_len, 2 * hidden_size)
-        q_enc = self.enc(q_emb, q_len)    # (batch_size, q_len, 2 * hidden_size)
+        # pdb.set_trace()
+	# NOTE: we need to account for padding somehow!!!
+	# I'm going to ask in office hours about this. It's not clear to me how to do this.
+	# since we're appling convoluations first, not sure 
+
+        c_enc = self.enc(c_emb)    # (batch_size, c_len, 2 * hidden_size)
+        q_enc = self.enc(q_emb)    # (batch_size, q_len, 2 * hidden_size)
 
         att = self.att(c_enc, q_enc,
                        c_mask, q_mask)    # (batch_size, c_len, 8 * hidden_size)
@@ -130,6 +137,7 @@ class BiDAF(nn.Module):
 
         c_emb = self.emb(cw_idxs)         # (batch_size, c_len, hidden_size)
         q_emb = self.emb(qw_idxs)         # (batch_size, q_len, hidden_size)
+   
 
         c_enc = self.enc(c_emb, c_len)    # (batch_size, c_len, 2 * hidden_size)
         q_enc = self.enc(q_emb, q_len)    # (batch_size, q_len, 2 * hidden_size)
