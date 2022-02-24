@@ -51,6 +51,7 @@ class OutputLayer(torch.nn.Module):
         return log_p1, log_p2
 
 
+# just realized this is literally the same as BiDAF attention. Oops.
 class ContextQueryAttention(torch.nn.Module):
     """Context-query attention subnetwork, as described in the QANet paper.
 
