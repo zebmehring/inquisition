@@ -1,0 +1,65 @@
+[02.24.22 07:52:53] Args: {
+    "batch_size": 64,
+    "char_emb_file": "./data/char_emb.json",
+    "dev_eval_file": "./data/dev_eval.json",
+    "dev_record_file": "./data/dev.npz",
+    "drop_prob": 0.2,
+    "ema_decay": 0.999,
+    "eval_steps": 50000,
+    "gpu_ids": [
+        0
+    ],
+    "hidden_size": 100,
+    "l2_wd": 0,
+    "load_path": null,
+    "lr": 0.5,
+    "max_ans_len": 15,
+    "max_checkpoints": 5,
+    "max_grad_norm": 5.0,
+    "maximize_metric": true,
+    "metric_name": "F1",
+    "name": "qanet_full",
+    "num_epochs": 30,
+    "num_visuals": 10,
+    "num_workers": 4,
+    "save_dir": "./save/train/qanet_full-01",
+    "seed": 224,
+    "test_eval_file": "./data/test_eval.json",
+    "test_record_file": "./data/test.npz",
+    "train_eval_file": "./data/train_eval.json",
+    "train_record_file": "./data/train.npz",
+    "use_squad_v2": true,
+    "word_emb_file": "./data/word_emb.json"
+}
+[02.24.22 07:52:53] Using random seed 224...
+[02.24.22 07:52:53] Loading embeddings...
+[02.24.22 07:52:57] Building model...
+[02.24.22 07:53:00] Saver will maximize F1...
+[02.24.22 07:53:00] Building dataset...
+[02.24.22 07:53:08] Training...
+[02.24.22 07:53:08] Starting epoch 1...
+  0%|          | 0/129941 [00:00<?, ?it/s]  0%|          | 0/129941 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "train.py", line 243, in <module>
+    main(get_train_args())
+  File "train.py", line 97, in main
+    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
+  File "train.py", line 131, in train
+    log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
+  File "/anaconda/envs/squad/lib/python3.6/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/anaconda/envs/squad/lib/python3.6/site-packages/torch/nn/parallel/data_parallel.py", line 159, in forward
+    return self.module(*inputs[0], **kwargs[0])
+  File "/anaconda/envs/squad/lib/python3.6/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/azureuser/inquisition/squad/models.py", line 101, in forward
+    c_enc = self.enc(c_emb, c_mask)    # (batch_size, max_context_len, hidden_size)
+  File "/anaconda/envs/squad/lib/python3.6/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/azureuser/inquisition/squad/qanet_layers.py", line 225, in forward
+    output = self.position_encoder(x) # (batch_size, seq_len, hidden_size)
+  File "/anaconda/envs/squad/lib/python3.6/site-packages/torch/nn/modules/module.py", line 727, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/azureuser/inquisition/squad/qanet_layers.py", line 309, in forward
+    return self.position_encodings[:x.shape[1]] + x
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!
