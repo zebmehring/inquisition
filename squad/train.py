@@ -47,7 +47,9 @@ def main(args):
 
     # Get model
     log.info('Building model...')
+    """
     model = BiDAF(word_vectors=word_vectors,
+                  char_vecs=character_vectors,
                   hidden_size=args.hidden_size,
                   drop_prob=args.drop_prob)
     """
@@ -55,7 +57,6 @@ def main(args):
                   character_vectors = character_vectors,
                   hidden_size = args.hidden_size,
                   drop_prob = args.drop_prob)
-    """
     model = nn.DataParallel(model, args.gpu_ids)
     if args.load_path:
         log.info(f'Loading checkpoint from {args.load_path}...')
@@ -94,7 +95,7 @@ def main(args):
                                  collate_fn=collate_fn)
 
     # Train
-    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=False)#True)
+    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
 
 
 

@@ -38,20 +38,20 @@ class QANet(nn.Module):
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size,
+        self.enc = qanet_layers.EncoderBlock(hidden_size = 2*hidden_size,
                                              num_convs=4,
                                              num_attn_heads=8)
 
         # this is the same as the C2Q and Q2C attention used by QANet.
-        self.att = layers.BiDAFAttention(hidden_size=hidden_size,
+        self.att = layers.BiDAFAttention(hidden_size=2*hidden_size,
                                          drop_prob=drop_prob)
         #self.att = qanet_layers.ContextQueryAttention(hidden_size = hidden_size, drop_prob = drop_prob)
 
-        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
+        self.mod = qanet_layers.EncoderBlock(hidden_size=8*hidden_size,
                                      num_convs=7,
                                      num_attn_heads=1)
 
-        self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
+        self.out = qanet_layers.OutputLayer(hidden_size = 2*hidden_size)
 
         self.num_enc_blocks = num_enc_blocks
 
@@ -127,13 +127,14 @@ class BiDAF(nn.Module):
         hidden_size (int): Number of features in the hidden state at each layer.
         drop_prob (float): Dropout probability.
     """
-    def __init__(self, word_vectors, hidden_size, drop_prob=0.):
+    def __init__(self, word_vectors, char_vecs, hidden_size, drop_prob=0.):
         super(BiDAF, self).__init__()
-        self.emb = layers.Embedding(word_vectors=word_vectors,
+        self.emb = qanet_layers.Embedding(word_vectors=word_vectors,
+                                    character_vectors = char_vecs,
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-        self.enc = layers.RNNEncoder(input_size=hidden_size,
+        self.enc = layers.RNNEncoder(input_size=2*hidden_size,
                                      hidden_size=hidden_size,
                                      num_layers=1,
                                      drop_prob=drop_prob)
@@ -149,13 +150,13 @@ class BiDAF(nn.Module):
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
 
-    def forward(self, cw_idxs, qw_idxs):
+    def forward(self, cw_idxs, cc_idxs, qw_idxs, qc_idxs):
         c_mask = torch.zeros_like(cw_idxs) != cw_idxs
         q_mask = torch.zeros_like(qw_idxs) != qw_idxs
         c_len, q_len = c_mask.sum(-1), q_mask.sum(-1)
 
-        c_emb = self.emb(cw_idxs)         # (batch_size, c_len, hidden_size)
-        q_emb = self.emb(qw_idxs)         # (batch_size, q_len, hidden_size)
+        c_emb = self.emb((cw_idxs, cc_idxs))         # (batch_size, c_len, hidden_size)
+        q_emb = self.emb((qw_idxs, qc_idxs))         # (batch_size, q_len, hidden_size)
    
 
         c_enc = self.enc(c_emb, c_len)    # (batch_size, c_len, 2 * hidden_size)
