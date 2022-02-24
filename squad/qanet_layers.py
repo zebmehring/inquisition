@@ -48,7 +48,7 @@ class ContextQueryAttention(torch.nn.Module):
         A = torch.bmm(S, query) 
         B = torch.bmm(torch.bmm(S_bar, S_bar_bar.transpose(-1,-2)), context)
 
-        output = torch.cat([context, A, context * A, context * B], dim=2)  # (bs, c_len, 4 * hid_size)
+        output = torch.cat([context, A, context * A, context * B], dim=2)  # (batch_size, max_content_length, 4 * hid_size)
         return output
 
     def get_similarity_matrix(self, c, q):

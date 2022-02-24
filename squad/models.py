@@ -47,13 +47,13 @@ class QANet(nn.Module):
         self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size,
                                              num_convs=4,
                                              num_attn_heads=8)
- 
-        """
-        self.att = qanet_layers.ContextQueryAttention(hidden_size=2*hidden_size,
+
+        self.att = qanet_layers.ContextQueryAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
         """
         self.att = layers.BiDAFAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
+        """
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
                                      num_convs=7,
@@ -90,26 +90,22 @@ class QANet(nn.Module):
         #pdb.set_trace()
 
         
-        q_enc = self.enc(q_emb, q_mask)
-        c_enc = self.enc(c_emb, c_mask)
 
-        """
+        #c_enc = self.enc(c_emb, c_len)
+        #q_enc = self.enc(q_emb, q_len)
+
         for i in range(self.num_enc_blocks[0]):
-            c_enc = self.enc(c_emb)    # (batch_size, c_len, 2 * hidden_size)
-            q_enc = self.enc(q_emb)    # (batch_size, q_len, 2 * hidden_size)
-        """
- 
-        # FOR TESTING PURPOSES!!!
-        #c_enc = torch.cat((c_enc, c_enc), dim=-1)
-        #q_enc = torch.cat((q_enc, q_enc), dim=-1)
+            c_enc = self.enc(c_emb, c_mask)    # (batch_size, max_context_len, hidden_size)
+            q_enc = self.enc(q_emb, q_mask)    # (batch_size, max_query_len, hidden_size)
+
+
 
         att = self.att(c_enc, q_enc,
-                       c_mask, q_mask)    # (batch_size, c_len, 8 * hidden_size)
-        """
+                       c_mask, q_mask)    # (batch_size, c_len, 4 * hidden_size)
         for i in range(self.num_enc_blocks[1]):
-            mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
-        """
-        mod = self.mod(att, c_mask)
+            mod = self.mod(att, c_mask)        # (batch_size, c_len, 4 * hidden_size)
+
+        #mod = self.mod(att, c_mask)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 
