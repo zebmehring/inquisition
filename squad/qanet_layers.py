@@ -28,8 +28,11 @@ class OutputLayer(torch.nn.Module):
         '''
         super(OutputLayer, self).__init__()
 
-        self.start_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
-        self.end_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
+        # 8 times hidden_size because each layer multilies two outputs fro mteh model encoder block
+        # and input to model encoder blocks will have last dim shape equal to 4*hidden_size since the input
+        # input to model encoder blocks cmoes from c2q attention (and that's how big the output of that function is)
+        self.start_span_linear = nn.Linear(8*hidden_size, 1, bias=False)
+        self.end_span_linear = nn.Linear(8*hidden_size, 1, bias=False)
 
     def forward(self, model_encoder_outputs, mask):
         '''
@@ -37,10 +40,9 @@ class OutputLayer(torch.nn.Module):
         This is M0, M1, M2 fro mthe paper (in that order).
         :param mask
         '''
-
         # both of the logits have shape (batch_size, seq_len, 1)
-        logits_start = self.start_span_linear(torch.cat(model_encoder_outputs[0], model_encoder_outputs[1], dim=-1))
-        logits_end = self.start_span_linear(torch.cat(model_encoder_outputs[0], model_encoder_outputs[2], dim=-1))
+        logits_start = self.start_span_linear(torch.cat((model_encoder_outputs[0], model_encoder_outputs[1]), dim=-1))
+        logits_end = self.start_span_linear(torch.cat((model_encoder_outputs[0], model_encoder_outputs[2]), dim=-1))
 
         # After squeezing, both logits have shape (batch_size, seq_len)
         log_p1 = masked_softmax(logits_start.squeeze(), mask, log_softmax=True)
