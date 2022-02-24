@@ -256,11 +256,13 @@ class EncoderBlock(torch.nn.Module):
         output += residual
 
         residual = output
+        output[~extended_mask] = 0
         output = self.layer_norm(output)
         output = relu(self.ff(output))
         output = self.ff2(output)
         output += residual
 
+        output[~extended_mask] = 0
         return output
 
 
