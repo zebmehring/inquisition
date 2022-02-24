@@ -103,16 +103,23 @@ class SelfAttention(torch.nn.Module):
                               out_features = hidden_size, bias=False)
 
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         """
 
         :param x: has shape (batch_size, seq_len, hidden_size)
+	:param mask: tensor with shape (batch_size, seq_len) 
         :return:
         """
+        #pdb.set_trace()
+
         attention_outputs = None
         for i in range(self.num_attn_heads):
-            attention_scores = softmax(torch.bmm(self.Qs[i](x), self.Ks[i](x).transpose(-1, -2) /
-                                                 torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32))))
+            logits = torch.bmm(self.Qs[i](x), self.Ks[i](x).transpose(-1, -2) / torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32)))
+            attention_scores = None
+            if mask is None:
+                attention_scores = softmax(logits)
+            else:
+                attention_scores = masked_softmax(logits, torch.bmm(mask.long().unsqueeze(2), mask.long().unsqueeze(1))) 
             output = torch.bmm(attention_scores, self.Vs[i](x))
             if attention_outputs is None:
                 attention_outputs = output
@@ -171,15 +178,16 @@ class EncoderBlock(torch.nn.Module):
 	# there's another weight plus bias multipliation. (See page 5 of Attention is All You Need).
         self.ff2 = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=True)
 
-    def forward(self, x):
+    def forward(self, x, x_mask):
         """
-
         :param x: tensor with shape (batch_size, seq_len, hidden_size)
-        :return:
-
-        TODO!
-
+        :param x_mask: tensor with shape (batch_size, seq_len)  for which x_mask[i][j] = False if jth character of ith sequence is masked and True otherwise. We'll use this to zero out and get negative infinity where necessary.
         """
+        # this just extends out the x_mask to have shape (batch_size, seq_len_ hiddensize)
+	# basically, extended_mask[i][j][k] = x_mask[i][j] for all 0 \leq k < x.shape[-1]
+        extended_mask = x_mask.unsqueeze(2).repeat(1,1,x.shape[-1])
+    
+        
         output = self.position_encoder(x) # (batch_size, seq_len, hidden_size)
 
         for conv in self.convs:
@@ -187,15 +195,30 @@ class EncoderBlock(torch.nn.Module):
             output = self.layer_norm(output)
             output = conv(output.transpose(-1,-2)) # by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = output.transpose(-1,-2) # now, just tranpoase it back to (batch_size, seq_len, hidden_size)
-            output += residual
 
+        # zero out the masked output tokens
+        #residual = (output * x_mask.reshape(x_mask.shape[0], x_mask.shape[1], 1)) # zeros out the vectors corresponding to masked tokens
+        #zero_masked_output = torch.clone(output)
+        #zero_masked_output[~extended_mask] = 0
+
+        #residual = zero_masked_output 
         residual = output
         output = self.layer_norm(output) # (batch_size, seq_len, hidden_size)
 
         # recall that self.Q(output) has shape (batch_size, seq_len. hidden_size) and same for self.K(output) and V(outupt)
 	# for this reason, we ahve to use bmm instead of regular matrix multplication and we also have to transpose
 	# the non-batch dimensions
-        output = self.att(output)
+        #pdb.set_trace()
+        """
+        negative_inf_mask = torch.ones((output.shape[0], output.shape[1]))
+        negative_inf_mask[x_mask == False] = float('-inf') 
+        output = self.att(output * negative_inf_mask.reshape(output.shape[0], output.shape[1], 1))
+        """
+        #neg_inf_masked_output = torch.clone(output)
+        #neg_inf_masked_output[~extended_mask] = float('-inf')
+
+        output = self.att(output, x_mask)
+        #pdb.set_trace()
         output += residual
 
         residual = output

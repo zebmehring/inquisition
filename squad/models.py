@@ -38,7 +38,7 @@ class QANet(nn.Module):
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-
+        """
         self.enc = layers.RNNEncoder(input_size=hidden_size,
                                      hidden_size=hidden_size,
                                      num_layers=1,
@@ -47,12 +47,14 @@ class QANet(nn.Module):
         self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size,
                                              num_convs=4,
                                              num_attn_heads=8)
+ 
         """
-
         self.att = qanet_layers.ContextQueryAttention(hidden_size=2*hidden_size,
                                          drop_prob=drop_prob)
-
         """
+        self.att = layers.BiDAFAttention(hidden_size=hidden_size,
+                                         drop_prob=drop_prob)
+
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
                                      num_convs=7,
                                      num_attn_heads=1)
@@ -61,6 +63,7 @@ class QANet(nn.Module):
                                      hidden_size=hidden_size,
                                      num_layers=2,
                                      drop_prob=drop_prob)
+        """
 
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
@@ -84,9 +87,11 @@ class QANet(nn.Module):
 	# NOTE: we need to account for padding somehow!!!
 	# I'm going to ask in office hours about this. It's not clear to me how to do this.
 	# since we're appling convoluations first, not sure
+        #pdb.set_trace()
 
-        c_enc = self.enc(c_emb, c_len)
-        q_enc = self.enc(q_emb, q_len)
+        
+        q_enc = self.enc(q_emb, q_mask)
+        c_enc = self.enc(c_emb, c_mask)
 
         """
         for i in range(self.num_enc_blocks[0]):
@@ -104,7 +109,7 @@ class QANet(nn.Module):
         for i in range(self.num_enc_blocks[1]):
             mod = self.mod(att)        # (batch_size, c_len, 2 * hidden_size)
         """
-        mod = self.mod(att, c_len)
+        mod = self.mod(att, c_mask)
 
         out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
 
