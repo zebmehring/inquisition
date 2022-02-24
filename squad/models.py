@@ -45,6 +45,7 @@ class QANet(nn.Module):
         # this is the same as the C2Q and Q2C attention used by QANet.
         self.att = layers.BiDAFAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
+        #self.att = qanet_layers.ContextQueryAttention(hidden_size = hidden_size, drop_prob = drop_prob)
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
                                      num_convs=7,

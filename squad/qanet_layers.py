@@ -258,9 +258,11 @@ class EncoderBlock(torch.nn.Module):
 
         residual = output
         output = self.layer_norm(output)
+        output[~extended_mask] = 0 # zero out the vectors corresponding to padding tokens
         output = relu(self.ff(output))
         output = self.ff2(output)
         output += residual
+        output[~extended_mask] = 0 # zero out the vectors corresponding to padding tokens
 
         return output
 
