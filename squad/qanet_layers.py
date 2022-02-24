@@ -17,6 +17,38 @@ from torch.nn.functional import softmax
 import pdb
 
 
+class OutputLayer(torch.nn.Module):
+    """
+    """
+
+    def __init__(self, hidden_size):
+        '''
+
+        :param hidden_size: hidden size of all layers in the QANet network.
+        '''
+        super(OutputLayer, self).__init__()
+
+        start_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
+        end_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
+
+    def foward(self, model_encoder_outputs, mask):
+        '''
+        :param model_encoder_outputs (list[torch.tensor]): a list of model encoding outputs
+        This is M0, M1, M2 fro mthe paper (in that order).
+        :param mask
+        '''
+
+        # both of the logits have shape (batch_size, seq_len, 1)
+        logits_start = self.start_span_linear(torch.cat(model_encoder_outputs[0], model_encoder_outputs[1], dim=-1))
+        logits_end = self.start_span_linear(torch.cat(model_encoder_outputs[0], model_encoder_outputs[2], dim=-1))
+
+        # After squeezing, both logits have shape (batch_size, seq_len)
+        log_p1 = masked_softmax(logits_start.squeeze(), mask, log_softmax=True)
+        log_p2 = masked_softmax(logits_end.squeeze(), mask, log_softmax=True)
+
+        return log_p1, log_p2
+
+
 class ContextQueryAttention(torch.nn.Module):
     """Context-query attention subnetwork, as described in the QANet paper.
 

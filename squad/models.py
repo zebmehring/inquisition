@@ -65,8 +65,11 @@ class QANet(nn.Module):
                                      drop_prob=drop_prob)
         """
 
+        """
         self.out = layers.BiDAFOutput(hidden_size=hidden_size,
                                       drop_prob=drop_prob)
+        """
+        self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
 
         self.num_enc_blocks = [1,7]
 
@@ -102,12 +105,21 @@ class QANet(nn.Module):
 
         att = self.att(c_enc, q_enc,
                        c_mask, q_mask)    # (batch_size, c_len, 4 * hidden_size)
-        for i in range(self.num_enc_blocks[1]):
-            mod = self.mod(att, c_mask)        # (batch_size, c_len, 4 * hidden_size)
+
+        mods = list()
+
+        # there are three layers of encoder block stacks.
+        # each shares parameters (i.e. is the same block stack)
+        # so we just run our output through this three times and save some intermediate outputs.
+        for _ in range(3):
+            for i in range(self.num_enc_blocks[1]):
+                mod = self.mod(att, c_mask)        # (batch_size, c_len, 4 * hidden_size)
+            mods.append(mod)
 
         #mod = self.mod(att, c_mask)
 
-        out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
+        #out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)
+        out = self.out(mods, c_mask)
 
         return out
 
