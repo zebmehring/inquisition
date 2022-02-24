@@ -28,10 +28,10 @@ class OutputLayer(torch.nn.Module):
         '''
         super(OutputLayer, self).__init__()
 
-        start_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
-        end_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
+        self.start_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
+        self.end_span_linear = nn.Linear(2*hidden_size, 1, bias=False)
 
-    def foward(self, model_encoder_outputs, mask):
+    def forward(self, model_encoder_outputs, mask):
         '''
         :param model_encoder_outputs (list[torch.tensor]): a list of model encoding outputs
         This is M0, M1, M2 fro mthe paper (in that order).
