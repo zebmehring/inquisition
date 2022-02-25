@@ -67,29 +67,31 @@ class ContextQueryAttention(torch.nn.Module):
             nn.init.xavier_uniform_(weight)
         self.bias = nn.Parameter(torch.zeros(1))
 
-    def forward(self, context, query, c_mask, q_mask):
-        """
-        :param context: shape (batch_size, max_content_length, hidden_size)
-        :param query: shape (batch_size, max_query_length, hidden_size)
-        the masks just tell you where the cs and qs are masked. (e.g., if q[1][9] -- the 9th word in the second query in this batch -- is True, then taht means that that word is masked for that query.)
+    def forward(self, c, q, c_mask, q_mask):
+        batch_size, c_len, _ = c.size()
+        q_len = q.size(1)
+        s = self.get_similarity_matrix(c, q)  # (batch_size, c_len, q_len)
+        c_mask = c_mask.view(batch_size, c_len, 1)  # (batch_size, c_len, 1)
+        q_mask = q_mask.view(batch_size, 1, q_len)  # (batch_size, 1, q_len)
+        s1 = masked_softmax(s, q_mask, dim=1)  # (batch_size, c_len, q_len)
+        s2 = masked_softmax(s, c_mask, dim=2)  # (batch_size, c_len, q_len)
 
- 	NOTE!!! VERY VERY VERY important!!!! WE HAVE TO FIGURE OUT HOW TO DEAL WITH MASKING!! SAME FOR ENCODER BLOCK!!!
-        That may actually be why the EncoderBlock isn't working!
-        """
-        S = self.get_similarity_matrix(context, query)# shape (batch_size, max_context_length, max-query_length)
-        S_bar = softmax(S, dim=1) # shape batch_size, context_length, max_query_elngth
-        S_bar_bar = softmax(S, dim=2) # shape batch_size, max_context_length, max_query_length
-        A = torch.bmm(S, query) 
-        B = torch.bmm(torch.bmm(S_bar, S_bar_bar.transpose(-1,-2)), context)
+        # (bs, c_len, q_len) x (bs, q_len, hid_size) => (bs, c_len, hid_size)
+        a = torch.bmm(s1, q)
+        # (bs, c_len, c_len) x (bs, c_len, hid_size) => (bs, c_len, hid_size)
+        b = torch.bmm(torch.bmm(s1, s2.transpose(1, 2)), c)
 
-        output = torch.cat([context, A, context * A, context * B], dim=2)  # (batch_size, max_content_length, 4 * hid_size)
-        return output
+        x = torch.cat([c, a, c * a, c * b], dim=2)  # (bs, c_len, 4 * hid_size)
+
+        return x
 
     def get_similarity_matrix(self, c, q):
-        """
-        Note: we got this from the BiDAF implementation.
-        The reason this works is that the similarity function used by BiDAF and QANet
-        is the exact same.
+        """Get the "similarity matrix" between context and query (using the
+        terminology of the BiDAF paper).
+
+        A naive implementation as described in BiDAF would concatenate the
+        three vectors then project the result with a single weight matrix. This
+        method is a more memory-efficient implementation of the same operation.
 
         See Also:
             Equation 1 in https://arxiv.org/abs/1611.01603
@@ -98,15 +100,20 @@ class ContextQueryAttention(torch.nn.Module):
         c = F.dropout(c, self.drop_prob, self.training)  # (bs, c_len, hid_size)
         q = F.dropout(q, self.drop_prob, self.training)  # (bs, q_len, hid_size)
 
-        s0 = torch.matmul(c, self.c_weight).expand([-1, -1, q_len])
-        s1 = torch.matmul(q, self.q_weight).transpose(1, 2)\
-                                           .expand([-1, c_len, -1])
-        s2 = torch.matmul(c * self.cq_weight, q.transpose(1, 2))
+        # pdb.set_trace()
+        # Note to self: the BIDAF model is epxecting c \in (batch_size, seq_len, 2*hidden_size), where hidden_size
+        # is the hidden_size passed to the ender.
+        # the reason is that they do forward and backward RNN encoding and then concatenate the two final hidden layers
+        # and so their encoder outputs something that is 2 times the hidden_size in that case
+        # QANet does not do this.
+        # Shapes: (batch_size, c_len, q_len)
+        s0 = torch.matmul(q, self.q_weight).expand([-1, -1, c_len])
+        s1 = torch.matmul(c, self.c_weight).transpose(1, 2) \
+            .expand([-1, q_len, -1])
+        s2 = torch.matmul(q * self.cq_weight, c.transpose(1, 2))
         s = s0 + s1 + s2 + self.bias
 
         return s
-
-
 
 
 class SelfAttention(torch.nn.Module):

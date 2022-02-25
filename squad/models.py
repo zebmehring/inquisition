@@ -48,12 +48,14 @@ class QANet(nn.Module):
                                              num_convs=4,
                                              num_attn_heads=8)
 
-        """
+
         self.att = qanet_layers.ContextQueryAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
+
         """
         self.att = layers.BiDAFAttention(hidden_size=hidden_size,
                                          drop_prob=drop_prob)
+        """
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
                                      num_convs=7,
