@@ -130,24 +130,13 @@ class SelfAttention(torch.nn.Module):
         self.num_attn_heads = num_attn_heads
         self.hidden_size = hidden_size
 
-        # TEMPORARY!!! FOR TESTING
-        self.att = nn.MultiheadAttention(hidden_size, num_attn_heads, bias=False)
 
-        """
-        self.Qs = ModuleList([torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-        for _ in range(num_attn_heads)])
-        self.Ks = ModuleList([torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-                              for _ in range(num_attn_heads)])
-        self.Vs = ModuleList([torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-                              for _ in range(num_attn_heads)])
+        self.w_q = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
+        self.w_k = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
+        self.w_v = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
 
-        self.proj = nn.Linear(in_features = num_attn_heads * hidden_size,
-                              out_features = hidden_size, bias=False)
+        self.projection = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
 
-        """
 
     def forward(self, x, mask=None):
         """
@@ -156,32 +145,42 @@ class SelfAttention(torch.nn.Module):
 	:param mask: tensor with shape (batch_size, seq_len) 
         :return:
         """
-        #pdb.set_trace()
+        # these will have same dimensions as x
+        Q = self.w_q(x)
+        K = self.w_k(x)
+        V = self.w_v(x)
 
-        """
-        attention_outputs = None
-        for i in range(self.num_attn_heads):
-            logits = torch.bmm(self.Qs[i](x), self.Ks[i](x).transpose(-1, -2) / torch.sqrt(torch.tensor(self.hidden_size, dtype=torch.float32)))
-            attention_scores = None
-            if mask is None:
-                attention_scores = softmax(logits)
-            else:
-                attention_scores = masked_softmax(logits, torch.bmm(mask.long().unsqueeze(2), mask.long().unsqueeze(1))) 
-            output = torch.bmm(attention_scores, self.Vs[i](x))
-            if attention_outputs is None:
-                attention_outputs = output
-            else:
-                attention_outputs = torch.cat((attention_outputs, output), dim=-1)
+        # get the Q, K, and V for each separate attention head.
+        # these will be (batch_size, seq_len, num_attn_heads, hidden_size // num_attn_heads)
+        Q = Q.reshape(x.shape[0], x.shape[1], self.num_attn_heads, x.shape[-1] // self.num_attn_heads)
+        K = K.reshape(x.shape[0], x.shape[1], self.num_attn_heads, x.shape[-1] // self.num_attn_heads)
+        V = V.reshape(x.shape[0], x.shape[1], self.num_attn_heads, x.shape[-1] // self.num_attn_heads)
 
-        output = self.proj(attention_outputs)
+        # ensure that we can get the attention values per-head through matrix multiplication
+        # (because now QK^T will give us (batch_size, num_attn_heads, seq_len, seq_len), which will be the
+        # attention scores per head, where each head pays attention to a different subset of the x hidden size dimensions)
+        # these will have shape (batch_size, num_attn_heads, seq_len, hidden_size // num_attn_heads)
+        Q = Q.permute(0, 2, 1, 3)
+        K = K.permute(0, 2, 1, 3)
+        V = V.permute(0, 2, 1, 3)
+
+        # get the attention scores
+        # shape (batch_size, num_attn_heads, seq_len, seq_len)
+        logits = torch.matmul(Q, K.transpose(-1, -2)) / torch.sqrt(torch.tensor(self.hidden_size // self.num_attn_heads, dtype=torch.float32))
+        mask = mask.float().unsqueeze(1).repeat(1,self.num_attn_heads,1) # shape (batch_size, num_attn_heads, seq_len)
+        mask = torch.matmul(mask.unsqueeze(-1), mask.unsqueeze(-2)) # shape (batch_size, num_attn_heads, seq_len, seq_len). The masked out quantities will be rows and columns corresponding to padded tokens.
+        attention_scores = masked_softmax(logits, mask)
+
+        # get the attention vectors
+        output = torch.matmul(attention_scores, V) # shape (batch_size, num_attn_heads, seq_len, hidden_size // num_attn_heads)
+        output = output.permute(0, 2, 1, 3) # shape (batch_size, seq_len, num_attn_heads, hidden_size // num_attn_heads)
+        output = output.view(output.shape[0], output.shape[1], self.hidden_size) # shape (batch_size, seq_len, hidden_size)
+
+        # I think we only do the projection if we're doing multiheaded attention, right?
+        if self.num_attn_heads != 1:
+            output = self.projection(output)
 
         return output
-        """
-        temp_x = torch.transpose(x, 0, 1)
-        #temp_x = temp_x.repeat(1,1, self.num_attn_heads)
-        output = self.att(temp_x, temp_x, temp_x, key_padding_mask = ~mask)[0]
-        return torch.transpose(output, 0, 1)
-
 
 class EncoderBlock(torch.nn.Module):
     """Encoder block subnetwork, as described in the QANet paper.
