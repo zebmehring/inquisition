@@ -1,6 +1,7 @@
 # Inquisition: A Reformed Question-Answering System
 
 
+
 The current state for QANet:
 - Input embedding layer is done and I'm confident it's correct
 - PositionalEncoding is done and I'm confident it's correct
