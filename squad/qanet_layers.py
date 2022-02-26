@@ -135,7 +135,8 @@ class SelfAttention(torch.nn.Module):
         self.w_k = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
         self.w_v = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
 
-        self.projection = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
+        if self.num_attn_heads != 1:
+            self.projection = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
 
 
     def forward(self, x, mask=None):
