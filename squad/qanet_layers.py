@@ -174,7 +174,7 @@ class SelfAttention(torch.nn.Module):
         # get the attention vectors
         output = torch.matmul(attention_scores, V) # shape (batch_size, num_attn_heads, seq_len, hidden_size // num_attn_heads)
         output = output.permute(0, 2, 1, 3) # shape (batch_size, seq_len, num_attn_heads, hidden_size // num_attn_heads)
-        output = output.view(output.shape[0], output.shape[1], self.hidden_size) # shape (batch_size, seq_len, hidden_size)
+        output = output.reshape(output.shape[0], output.shape[1], self.hidden_size) # shape (batch_size, seq_len, hidden_size)
 
         # I think we only do the projection if we're doing multiheaded attention, right?
         if self.num_attn_heads != 1:
