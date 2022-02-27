@@ -31,7 +31,7 @@ class QANet(nn.Module):
         num_enc_blocks(list[int]): a two element list giving the number of times to apply the encoder blocks
 					for the embedding encoder layer and model encoder layer, respectively
     """
-    def __init__(self, word_vectors, character_vectors, hidden_size, drop_prob=0., num_enc_blocks=[1,7]):
+    def __init__(self, word_vectors, character_vectors, hidden_size, device, drop_prob=0., num_enc_blocks=[1,7]):
         super(QANet, self).__init__()
         self.emb = qanet_layers.Embedding(word_vectors=word_vectors,
                                     character_vectors = character_vectors,
@@ -44,7 +44,7 @@ class QANet(nn.Module):
                                      num_layers=1,
                                      drop_prob=drop_prob)
         """
-        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size,
+        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device,
                                              num_convs=4,
                                              num_attn_heads=8)
 
@@ -54,10 +54,10 @@ class QANet(nn.Module):
                                          drop_prob=drop_prob)
         """
 
-        self.att = layers.BiDAFAttention(hidden_size=hidden_size,
+        self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
         """
 
-        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size,
+        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device,
                                      num_convs=7,
                                      num_attn_heads=1)
         """

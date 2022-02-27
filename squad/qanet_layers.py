@@ -166,7 +166,7 @@ class SelfAttention(torch.nn.Module):
             if mask is None:
                 attention_scores = softmax(logits)
             else:
-                attention_scores = masked_softmax(logits, torch.bmm(mask.long().unsqueeze(2), mask.long().unsqueeze(1))) 
+                attention_scores = masked_softmax(logits, torch.bmm(mask.float().unsqueeze(2), mask.float().unsqueeze(1))) 
             output = torch.bmm(attention_scores, self.Vs[i](x))
             if attention_outputs is None:
                 attention_outputs = output
@@ -198,7 +198,7 @@ class EncoderBlock(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, hidden_size=128, num_convs=4, num_attn_heads=8):
+    def __init__(self, hidden_size, device, num_convs=4, num_attn_heads=8):
         """Constructs an encoder block module.
 
         Args:
@@ -209,9 +209,8 @@ class EncoderBlock(torch.nn.Module):
         """
         super(EncoderBlock, self).__init__()
 
-        self.position_encoder = PositionEncoder(hidden_size)
-     
         self.num_convs = num_convs 
+        self.position_encoder = PositionEncoder(hidden_size, device)
         
         self.hidden_size = hidden_size
 
@@ -263,7 +262,7 @@ class EncoderBlock(torch.nn.Module):
 
 
 class PositionEncoder(torch.nn.Module):
-    def __init__(self, hidden_size, max_seq_len=1000):
+    def __init__(self, hidden_size, device, max_seq_len=1000):
         """
 
         :param hidden_size: the dimensionality of the input
@@ -289,7 +288,7 @@ class PositionEncoder(torch.nn.Module):
         positions = positions.repeat(1, hidden_size // 2) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
 
 
-        self.position_encodings = torch.zeros((max_seq_len, hidden_size))
+        self.position_encodings = torch.zeros((max_seq_len, hidden_size)).to(device)
 
 
         self.position_encodings[:, 0::2] = torch.sin(positions / frequencies)

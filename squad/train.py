@@ -52,7 +52,7 @@ def main(args):
                   hidden_size=args.hidden_size,
                   drop_prob=args.drop_prob)
     """
-    model = QANet(word_vectors = word_vectors,
+    model = QANet(word_vectors = word_vectors, device=device,
                   character_vectors = character_vectors,
                   hidden_size = 128, #args.hidden_size,
                   drop_prob = args.drop_prob)
