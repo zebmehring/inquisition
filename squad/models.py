@@ -38,39 +38,16 @@ class QANet(nn.Module):
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-        """
-        self.enc = layers.RNNEncoder(input_size=hidden_size,
-                                     hidden_size=hidden_size,
-                                     num_layers=1,
-                                     drop_prob=drop_prob)
-        """
         self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device,
                                              num_convs=4,
                                              num_attn_heads=8)
 
 
-        """
-        self.att = qanet_layers.ContextQueryAttention(hidden_size=hidden_size,
-                                         drop_prob=drop_prob)
-        """
-
         self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
-        """
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device,
                                      num_convs=7,
                                      num_attn_heads=1)
-        """
-        self.mod = layers.RNNEncoder(input_size=8 * hidden_size,
-                                     hidden_size=hidden_size,
-                                     num_layers=2,
-                                     drop_prob=drop_prob)
-        """
-
-        """
-        self.out = layers.BiDAFOutput(hidden_size=hidden_size,
-                                      drop_prob=drop_prob)
-        """
         self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
 
         self.num_enc_blocks = [1,7]
