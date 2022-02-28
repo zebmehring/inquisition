@@ -98,7 +98,7 @@ def main(args):
 
     # Train
     train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver,
-          char_embeddings=True, track_memory=False)
+          char_embeddings=True, track_memory=True)
 
 
 
@@ -136,7 +136,8 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                         with profile(record_shapes=True, profile_memory=True) as prof:
                             with record_function(f"model_training_{epoch}"):
                                 log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
-                            print(prof.key_averages().table())
+ 
+                        print(prof.key_averages().table())
                     else:
                         log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
                 else:
@@ -144,7 +145,7 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                         with profile(record_shapes=True, profile_memory=True) as prof:
                             with record_function(f"model_training_{epoch}"):
                                 log_p1, log_p2 = model(cw_idxs, qw_idxs)
-                            print(prof.key_averages().table())
+                        print(prof.key_averages().table())
                     else:
                         log_p1, log_p2 = model(cw_idxs, qw_idxs)
                 y1, y2 = y1.to(device), y2.to(device)
