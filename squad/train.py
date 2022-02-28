@@ -97,12 +97,13 @@ def main(args):
                                  collate_fn=collate_fn)
 
     # Train
-    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
+    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver,
+          char_embeddings=True, track_memory=False)
 
 
 
 def train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver,
-          char_embeddings=False):
+          char_embeddings=False, track_memory=False):
     log.info('Training...')
     steps_till_eval = args.eval_steps
     epoch = step // len(train_dataset)
@@ -131,11 +132,21 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 log_p1 = None
                 log_p2 = None
                 if char_embeddings:
-                    with profile(record_shapes=True, profile_memory=True) as prof:
-                        with record_function(f"model_training_{epoch}"):
-                            log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
+                    if track_memory:
+                        with profile(record_shapes=True, profile_memory=True) as prof:
+                            with record_function(f"model_training_{epoch}"):
+                                log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
+                            print(prof.key_averages().table())
+                    else:
+                        log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
                 else:
-                    log_p1, log_p2 = model(cw_idxs, qw_idxs)
+                    if track_memory:
+                        with profile(record_shapes=True, profile_memory=True) as prof:
+                            with record_function(f"model_training_{epoch}"):
+                                log_p1, log_p2 = model(cw_idxs, qw_idxs)
+                            print(prof.key_averages().table())
+                    else:
+                        log_p1, log_p2 = model(cw_idxs, qw_idxs)
                 y1, y2 = y1.to(device), y2.to(device)
                 loss = F.nll_loss(log_p1, y1) + F.nll_loss(log_p2, y2)
                 loss_val = loss.item()

@@ -244,10 +244,10 @@ class EncoderBlock(torch.nn.Module):
             output = self.layer_norms[i](output)
             output = conv(output.transpose(-1,-2)) # by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = output.transpose(-1,-2) # now, just tranpoase it back to (batch_size, seq_len, hidden_size)
+            output += residual
 
         residual = output
         output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
-
         output = self.att(output, x_mask)
         output += residual
 
