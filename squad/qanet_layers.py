@@ -198,7 +198,7 @@ class EncoderBlock(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, hidden_size, device, num_convs=4, num_attn_heads=8):
+    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size):
         """Constructs an encoder block module.
 
         Args:
@@ -218,7 +218,7 @@ class EncoderBlock(torch.nn.Module):
 	# We get this using the equation for L_out given in conv1d documentation
 	# othewise, each conv operation would reduce dimensionality of the input, which is probably not desirable
 	# since we would no longer have one vector per index in the sequence.
-        self.convs = ModuleList([nn.Conv1d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=7, padding=3)
+        self.convs = ModuleList([nn.Conv1d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding=(kernel_size - 1) // 2)
                                  for _ in range(num_convs)])
         
         self.layer_norms = ModuleList([nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
