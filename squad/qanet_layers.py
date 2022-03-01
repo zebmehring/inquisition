@@ -17,6 +17,18 @@ from torch.nn.functional import softmax
 import pdb
 
 
+class DepthwiseSeparableConv1d(torch.nn.Module):
+    """ Got help from https://www.paepper.com/blog/posts/depthwise-separable-convolutions-in-pytorch/. Still don't fully understands the 'groups' parameter """
+    def __init__(self, in_channels, out_channels, kernel_size, padding):
+        super(DepthwiseSeparableConv1D, self).__init__()
+ 
+        self.depthwise_conv = nn.Conv1d(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, padding = padding, groups=in_channels)
+        self.pointwise_conv = nn.Conv1d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, padding=0)
+
+    def forward(self, x):
+        return self.pointwise_conv(self.depthwise_conv(x))
+
+
 class OutputLayer(torch.nn.Module):
     """
     """
