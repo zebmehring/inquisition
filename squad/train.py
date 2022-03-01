@@ -27,6 +27,8 @@ import torch
 from torch.profiler import profile, record_function
 
 
+
+
 def main(args):
     # Set up logging and devices
     args.save_dir = util.get_save_dir(args.save_dir, args.name, training=True)
@@ -77,9 +79,9 @@ def main(args):
                                  log=log)
 
     # Get optimizer and scheduler
-    optimizer = optim.Adadelta(model.parameters(), args.lr,
-                               weight_decay=args.l2_wd)
-    scheduler = sched.LambdaLR(optimizer, lambda s: 1.)  # Constant LR
+    optimizer = optim.Adam(model.parameters(), args.lr,
+                               weight_decay=args.l2_wd, betas=(0.8, 0.999))
+    scheduler = sched.LambdaLR(optimizer, lambda s: np.log10(s+1) / 3000 if s < 1000 else 0.001)  
 
     # Get data loader
     log.info('Building dataset...')
@@ -144,7 +146,7 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 optimizer.step()
-                scheduler.step(step // batch_size)
+                scheduler.step()
                 ema(model, step // batch_size)
 
                 # Log info
