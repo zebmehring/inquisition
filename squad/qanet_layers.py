@@ -225,10 +225,9 @@ class EncoderBlock(torch.nn.Module):
         self.att = SelfAttention(hidden_size, num_attn_heads)
 
 
-        self.ff = torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=True)
-	# there's another weight plus bias multipliation. (See page 5 of Attention is All You Need).
-        self.ff2 = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=True)
+        # TA said to use kenrel_size = 1 and padding = 0 for these
+        self.ff = nn.Conv1d(in_channels = hidden_size, out_channels=hidden_size, kernel_size=1, padding=0) 
+        self.ff2 = nn.Conv1d(in_channels = hidden_size, out_channels=hidden_size, kernel_size=1, padding=0) 
 
     def forward(self, x, x_mask):
         """
@@ -243,19 +242,19 @@ class EncoderBlock(torch.nn.Module):
             output = self.layer_norms[i](output)
             output = conv(output.transpose(-1,-2)) # by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = output.transpose(-1,-2) # now, just tranpoase it back to (batch_size, seq_len, hidden_size)
-            output += residual
+            output = output + residual
 
         residual = output
         output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
 
         output = self.att(output, x_mask)
-        output += residual
+        output = output + residual
 
         residual = output
         output = self.layer_norms[self.num_convs+1](output)
-        output = relu(self.ff(output))
-        output = self.ff2(output)
-        output += residual
+        output = relu(self.ff(output.transpose(-1,-2)).transpose(-1,-2))
+        output = self.ff2(output.transpose(-1,-2)).transpose(-1,-2)
+        output = output + residual
 
         return output
 
