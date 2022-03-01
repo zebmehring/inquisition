@@ -361,7 +361,7 @@ class Embedding(nn.Module):
         #char_emb_modified = char_emb_modified.reshape(char_emb.shape[0], char_emb.shape[1], char_emb.shape[2], char_emb_modified.shape[-1])
         char_emb_modified = torch.max(char_emb_modified, dim=-1)[0] # (batch_size, seq_len, hidden_size // 2)
         char_emb = char_emb_modified.permute(0,2,1) # shape (batch_size, seq_len, char_emb_dim)
-        char_emb = F.dropout(char_emb, self.drop_prob, self.training)
+        char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
 
         word_emb = F.dropout(word_emb, self.drop_prob, self.training)
 
