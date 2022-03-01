@@ -76,8 +76,10 @@ def main(args):
                                  log=log)
 
     # Get optimizer and scheduler
-    optimizer = optim.Adam(model.parameters(), args.lr,
-                               weight_decay=args.l2_wd, betas=(0.8, 0.999))
+    # set learning rate to 1 here because that LR is multiplied into the schedulerlR and the scheduler
+    # LR fully specifies the correct learning rate. 
+    optimizer = optim.Adam(model.parameters(), 1, 
+                               weight_decay=3e-7, betas=(0.8, 0.999))
     scheduler = sched.LambdaLR(optimizer, lambda s: np.log10(s+1) / 3000 if s < 1000 else 0.001)  
 
     # Get data loader

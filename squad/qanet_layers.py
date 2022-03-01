@@ -198,7 +198,7 @@ class EncoderBlock(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, hidden_size, device, num_convs=4, num_attn_heads=8):
+    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size):
         """Constructs an encoder block module.
 
         Args:
@@ -218,8 +218,7 @@ class EncoderBlock(torch.nn.Module):
 	# We get this using the equation for L_out given in conv1d documentation
 	# othewise, each conv operation would reduce dimensionality of the input, which is probably not desirable
 	# since we would no longer have one vector per index in the sequence.
-        self.convs = ModuleList([nn.Conv1d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=7, padding=3)
-                                 for _ in range(num_convs)])
+        self.convs = ModuleList([nn.Conv1d(in_channels=hidden_size, out_channels=hidden_size, kernel_size=kernel_size, padding=(kernel_size - 1) // 2) for _ in range(num_convs)])
         
         self.layer_norms = ModuleList([nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
 
@@ -321,11 +320,11 @@ class Embedding(nn.Module):
     def __init__(self, word_vectors, character_vectors, hidden_size, drop_prob):
         super(Embedding, self).__init__()
         self.drop_prob = drop_prob
-        self.char_embed = nn.Embedding.from_pretrained(character_vectors)
+        self.char_embed = nn.Embedding.from_pretrained(character_vectors, freeze=False)
         self.word_embed = nn.Embedding.from_pretrained(word_vectors)
         #self.conv1d = nn.Conv1d(in_channels=character_vectors.shape[-1], out_channels=hidden_size // 2, kernel_size=3, padding=1) # not sure on kernel size
-        self.conv = nn.Conv2d(in_channels=character_vectors.shape[-1], out_channels = hidden_size // 2, kernel_size=(1,5))
-        self.proj = nn.Linear(word_vectors.size(1), hidden_size//2, bias=False)
+        self.conv = nn.Conv2d(in_channels=character_vectors.shape[-1], out_channels = hidden_size, kernel_size=(1,5))
+        self.conv_projection = nn.Conv1d(in_channels=word_vectors.shape[-1] + hidden_size, out_channels=hidden_size, kernel_size=1, padding=0)
         self.hwy = HighwayEncoder(2, hidden_size)
 
         # self.test = PositionEncoder(hidden_size)
@@ -366,9 +365,9 @@ class Embedding(nn.Module):
         char_emb = F.dropout(char_emb, self.drop_prob, self.training)
 
         word_emb = F.dropout(word_emb, self.drop_prob, self.training)
-        word_emb = self.proj(word_emb)  # (batch_size, seq_len, hidden_size // 2)
 
         emb = torch.cat((word_emb, char_emb), dim=2) # (batch_size, seq_len, hidden_size)
+        emb = self.conv_projection(emb.transpose(-1,-2)).transpose(-1,-2)
 
         emb = self.hwy(emb)   # (batch_size, seq_len, hidden_size)
   

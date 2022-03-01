@@ -40,14 +40,17 @@ class QANet(nn.Module):
 
         self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device,
                                              num_convs=4,
-                                             num_attn_heads=8)
+                                             num_attn_heads=8,
+                                             kernel_size=7)
 
 
         self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device,
                                      num_convs=7,
-                                     num_attn_heads=1)
+                                     num_attn_heads=1,
+                                     kernel_size=5)
+
         self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
 
         self.num_enc_blocks = [1,7]
