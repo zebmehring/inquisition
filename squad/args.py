@@ -103,7 +103,7 @@ def get_train_args():
                         help='Learning rate.')
     parser.add_argument('--l2_wd',
                         type=float,
-                        default=0,
+                        default=3e-7,
                         help='L2 weight decay.')
     parser.add_argument('--num_epochs',
                         type=int,
@@ -223,7 +223,7 @@ def add_train_test_args(parser):
                         help='Base directory for saving information.')
     parser.add_argument('--batch_size',
                         type=int,
-                        default=64,
+                        default=16,
                         help='Batch size per GPU. Scales automatically when \
                               multiple GPUs are available.')
     parser.add_argument('--use_squad_v2',

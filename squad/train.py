@@ -23,6 +23,9 @@ from tqdm import tqdm
 from ujson import load as json_load
 from util import collate_fn, SQuAD
 
+import torch
+from torch.profiler import profile, record_function
+
 
 def main(args):
     # Set up logging and devices
@@ -74,9 +77,13 @@ def main(args):
                                  log=log)
 
     # Get optimizer and scheduler
-    optimizer = optim.Adadelta(model.parameters(), args.lr,
-                               weight_decay=args.l2_wd)
-    scheduler = sched.LambdaLR(optimizer, lambda s: 1.)  # Constant LR
+    # optimizer = optim.Adadelta(model.parameters(), args.lr,
+    #                            weight_decay=args.l2_wd)
+    # scheduler = sched.LambdaLR(optimizer, lambda s: 1.)  # Constant LR
+
+    optimizer = optim.Adam(model.parameters(), args.lr,
+                               weight_decay=args.l2_wd, betas=(0.8, 0.999))
+    scheduler = sched.LambdaLR(optimizer, lambda s: np.log10(s+1) / 3000 if s < 1000 else 0.001)
 
     # Get data loader
     log.info('Building dataset...')
@@ -129,6 +136,9 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 log_p2 = None
                 if char_embeddings:
                     log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
+                    with profile(record_shapes=True, profile_memory=True) as prof:
+                        with record_function(f"model_training_{epoch}"):
+                            log_p1, log_p2 = model(cw_idxs, cc_idxs, qw_idxs, qc_idxs)
                 else:
                     log_p1, log_p2 = model(cw_idxs, qw_idxs)
                 y1, y2 = y1.to(device), y2.to(device)
@@ -139,7 +149,7 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 optimizer.step()
-                scheduler.step(step // batch_size)
+                scheduler.step()
                 ema(model, step // batch_size)
 
                 # Log info
