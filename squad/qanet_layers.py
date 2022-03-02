@@ -17,6 +17,23 @@ from torch.nn.functional import softmax
 import pdb
 
 
+class StochasticDepth(torch.nn.Module):
+    """ 
+    """
+    def __init__(self, l, L, p_L=0.9):
+        super(StochasticDepth, self).__init__()
+   
+        self.p_l = 1 - (1 / L) * (1- p_L)
+        self.p_l_tensor = torch.tensor([self.p_l], dtype=torch.float32) 
+
+    def forward(self, x):
+        # at training time, dropout the input 
+        if self.training:
+            keep = torch.bernoulli(self.p_l_tensor) 
+            return keep * x 
+        # at test time, we just multiply the output by p_keep
+        return self.p_l * x 
+
 class DepthwiseSeparableConv1d(torch.nn.Module):
     """ Got help from https://www.paepper.com/blog/posts/depthwise-separable-convolutions-in-pytorch/. Still don't fully understands the 'groups' parameter """
     def __init__(self, in_channels, out_channels, kernel_size, padding):
@@ -296,35 +313,19 @@ class Embedding(nn.Module):
         word_idxs, char_idxs = x
         word_emb = self.word_embed(word_idxs)   # (batch_size, seq_len, word_embed_size)
         char_emb = self.char_embed(char_idxs) # (batch_size, seq_len, word_len, char_embed_size)
-        #pdb.set_trace()
-        #char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[1]*char_emb.shape[2], char_emb.shape[-1]) # collapse it so that all char embeddings are in same axis; no longer split by word index
-        # (batch_size, seq_len*word_len, char_embed_size)
 
-        #pdb.set_trace() 
-
-        #char_emb_modified = #self.conv1d(torch.transpose(char_emb_modified, -1,-2)) # swap axes to get the correct shape for conv layer
-        #char_emb_modified = torch.transpose(char_emb_modified, -1,-2) # after this, (batch_size, seq_len*word_len, hidden_size // 2)
-        # shape (batch_size, char_embed_size, seq_len, word_len
-
-        # DO DROPOUT BEFORE CONVOLUTION? 
         char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
-        char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[3], char_emb.shape[1], char_emb.shape[2])
-        char_emb_modified = self.conv(char_emb_modified)
-        char_emb_modified = F.relu(char_emb_modified) 
-
-        # now, we can go back to the tensor before calling view (since they refer to the same object in memory)!
-        # and take the max along word_len as desired
-        # (batch_size, seq_len*word_len, hidden_dim)
-        #char_emb = torch.max(char_emb, dim=2) # (batch_size, seq_len, hidden_size // 2)
-        #char_emb_modified = char_emb_modified.reshape(char_emb.shape[0], char_emb.shape[1], char_emb.shape[2], char_emb_modified.shape[-1])
-        char_emb_modified = torch.max(char_emb_modified, dim=-1)[0] # (batch_size, seq_len, hidden_size // 2)
-        char_emb = char_emb_modified.permute(0,2,1) # shape (batch_size, seq_len, char_emb_dim)
+        char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[3], char_emb.shape[1], char_emb.shape[2]) # shape (batch_size, char_embed_size, seq_len, word_len)
+        char_emb_modified = self.conv(char_emb_modified) # shape (batch_size, char_embed_size, seq_len, word_len)
+        char_emb_modified = F.relu(char_emb_modified) # shape (batch_size, hidden_size, seq_len, word_len) 
+        char_emb_modified = torch.max(char_emb_modified, dim=-1)[0] # (batch_size, hidden_size, seq_len)
+        char_emb = char_emb_modified.permute(0,2,1) # shape (batch_size, seq_len, hidden_size)
         char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
 
-        word_emb = F.dropout(word_emb, self.drop_prob, self.training)
+        word_emb = F.dropout(word_emb, self.drop_prob, self.training) # shape (batch_size, seq_len, word_embed_size)
 
-        emb = torch.cat((word_emb, char_emb), dim=2) # (batch_size, seq_len, hidden_size)
-        emb = self.conv_projection(emb.transpose(-1,-2)).transpose(-1,-2)
+        emb = torch.cat((word_emb, char_emb), dim=2) # (batch_size, seq_len, word_emb_size hidden_size)
+        emb = self.conv_projection(emb.transpose(-1,-2)).transpose(-1,-2) # (batch_size, seq_len, hidden_size)
 
         emb = self.hwy(emb)   # (batch_size, seq_len, hidden_size)
   
