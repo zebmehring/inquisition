@@ -38,7 +38,7 @@ class QANet(nn.Module):
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device,
+        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device, drop_prob = drop_prob,
                                              num_convs=4,
                                              num_attn_heads=8,
                                              kernel_size=7)
@@ -46,7 +46,7 @@ class QANet(nn.Module):
 
         self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
 
-        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device,
+        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device, drop_prob = drop_prob,
                                      num_convs=7,
                                      num_attn_heads=1,
                                      kernel_size=5)

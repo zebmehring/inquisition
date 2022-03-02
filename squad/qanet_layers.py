@@ -20,7 +20,7 @@ import pdb
 class DepthwiseSeparableConv1d(torch.nn.Module):
     """ Got help from https://www.paepper.com/blog/posts/depthwise-separable-convolutions-in-pytorch/. Still don't fully understands the 'groups' parameter """
     def __init__(self, in_channels, out_channels, kernel_size, padding):
-        super(DepthwiseSeparableConv1D, self).__init__()
+        super(DepthwiseSeparableConv1d, self).__init__()
  
         self.depthwise_conv = nn.Conv1d(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size, padding = padding, groups=in_channels)
         self.pointwise_conv = nn.Conv1d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, padding=0)
@@ -146,7 +146,7 @@ class EncoderBlock(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size):
+    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size, drop_prob):
         """Constructs an encoder block module.
 
         Args:
@@ -158,7 +158,8 @@ class EncoderBlock(torch.nn.Module):
         super(EncoderBlock, self).__init__()
 
         self.num_convs = num_convs 
-        self.position_encoder = PositionEncoder(hidden_size, device)
+        self.drop_prob = drop_prob
+        self.position_encoder = PositionEncoder(hidden_size, device, drop_prob)
         
         self.hidden_size = hidden_size
 
@@ -188,18 +189,19 @@ class EncoderBlock(torch.nn.Module):
         for i, conv in enumerate(self.convs):
             residual = output
             output = self.layer_norms[i](output)
-            output = conv(output.transpose(-1,-2)) # by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
-            output = output.transpose(-1,-2) # now, just tranpoase it back to (batch_size, seq_len, hidden_size)
+            output = F.dropout(output, self.drop_prob, self.training)
+            output = conv(output.transpose(-1,-2)).transpose(-1,-2)# by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = output + residual
 
         residual = output
         output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
-
+        output = F.dropout(output, self.drop_prob, self.training)
         output = self.att(output, x_mask)
         output = output + residual
 
         residual = output
         output = self.layer_norms[self.num_convs+1](output)
+        output = F.dropout(output, self.drop_prob, self.training)
         output = relu(self.ff(output.transpose(-1,-2)).transpose(-1,-2))
         output = self.ff2(output.transpose(-1,-2)).transpose(-1,-2)
         output = output + residual
@@ -209,7 +211,7 @@ class EncoderBlock(torch.nn.Module):
 
 
 class PositionEncoder(torch.nn.Module):
-    def __init__(self, hidden_size, device, max_seq_len=1000):
+    def __init__(self, hidden_size, device, drop_prob, max_seq_len=1000):
         """
 
         :param hidden_size: the dimensionality of the input
@@ -223,6 +225,8 @@ class PositionEncoder(torch.nn.Module):
          and so position_encodings will have shape (max_seq_len, hidden_size)
         """
         super(PositionEncoder, self).__init__()
+
+        self.drop_prob = drop_prob
 
 
         freq_indices = torch.arange(hidden_size//2)#.repeat_interleave(2)
@@ -249,7 +253,8 @@ class PositionEncoder(torch.nn.Module):
         """
         # note that we only get the first seq_len position encodings (since max_seq_len
         # may be greater than seq_len)
-        return self.position_encodings[:x.shape[1]] + x
+        output = self.position_encodings[:x.shape[1]] + x
+        return F.dropout(output, self.drop_prob, self.training) 
 
 
 
