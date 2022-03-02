@@ -31,7 +31,7 @@ class QANet(nn.Module):
         num_enc_blocks(list[int]): a two element list giving the number of times to apply the encoder blocks
 					for the embedding encoder layer and model encoder layer, respectively
     """
-    def __init__(self, word_vectors, character_vectors, hidden_size, device, drop_prob, num_enc_blocks=[1,7]):
+    def __init__(self, word_vectors, character_vectors, hidden_size, device, drop_prob, num_enc_blocks=[1,5]):
         super(QANet, self).__init__()
         self.emb = qanet_layers.Embedding(word_vectors=word_vectors,
                                     character_vectors = character_vectors,
@@ -53,7 +53,7 @@ class QANet(nn.Module):
 
         self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
 
-        self.num_enc_blocks = [1,7]
+        self.num_enc_blocks = [1,5]
 
     def forward(self, cw_idxs, cc_idxs, qw_idxs, qc_idxs):
 
