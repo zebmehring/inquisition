@@ -15,4 +15,4 @@ dependencies:
   - tqdm
   - urllib3
   - pip:
-    - torch==1.7.1
+    - torch==1.8.1
