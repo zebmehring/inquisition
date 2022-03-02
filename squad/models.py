@@ -47,8 +47,8 @@ class QANet(nn.Module):
         self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
 
         self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device, drop_prob = drop_prob,
-                                     num_convs=7,
-                                     num_attn_heads=1,
+                                     num_convs=2,
+                                     num_attn_heads=8,
                                      kernel_size=5)
 
         self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)

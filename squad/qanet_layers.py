@@ -191,6 +191,7 @@ class EncoderBlock(torch.nn.Module):
             output = self.layer_norms[i](output)
             output = F.dropout(output, self.drop_prob, self.training)
             output = conv(output.transpose(-1,-2)).transpose(-1,-2)# by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
+            output = F.relu(output)
             output = output + residual
 
         residual = output
@@ -276,7 +277,7 @@ class Embedding(nn.Module):
         self.word_embed = nn.Embedding.from_pretrained(word_vectors)
         #self.conv1d = nn.Conv1d(in_channels=character_vectors.shape[-1], out_channels=hidden_size // 2, kernel_size=3, padding=1) # not sure on kernel size
         self.conv = nn.Conv2d(in_channels=character_vectors.shape[-1], out_channels = hidden_size, kernel_size=(1,5))
-        self.conv_projection = nn.Conv1d(in_channels=word_vectors.shape[-1] + hidden_size, out_channels=hidden_size, kernel_size=1, padding=0)
+        self.conv_projection = nn.Conv1d(in_channels=word_vectors.shape[-1] + hidden_size, out_channels=hidden_size, kernel_size=1, padding=0, bias=False)
         self.hwy = HighwayEncoder(2, hidden_size)
 
         # self.test = PositionEncoder(hidden_size)
@@ -295,6 +296,7 @@ class Embedding(nn.Module):
         word_idxs, char_idxs = x
         word_emb = self.word_embed(word_idxs)   # (batch_size, seq_len, word_embed_size)
         char_emb = self.char_embed(char_idxs) # (batch_size, seq_len, word_len, char_embed_size)
+        #pdb.set_trace()
         #char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[1]*char_emb.shape[2], char_emb.shape[-1]) # collapse it so that all char embeddings are in same axis; no longer split by word index
         # (batch_size, seq_len*word_len, char_embed_size)
 
@@ -303,6 +305,8 @@ class Embedding(nn.Module):
         #char_emb_modified = #self.conv1d(torch.transpose(char_emb_modified, -1,-2)) # swap axes to get the correct shape for conv layer
         #char_emb_modified = torch.transpose(char_emb_modified, -1,-2) # after this, (batch_size, seq_len*word_len, hidden_size // 2)
         # shape (batch_size, char_embed_size, seq_len, word_len
+
+        # DO DROPOUT BEFORE CONVOLUTION? 
         char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[3], char_emb.shape[1], char_emb.shape[2])
         char_emb_modified = self.conv(char_emb_modified)
         char_emb_modified = F.relu(char_emb_modified) 
