@@ -307,6 +307,7 @@ class Embedding(nn.Module):
         # shape (batch_size, char_embed_size, seq_len, word_len
 
         # DO DROPOUT BEFORE CONVOLUTION? 
+        char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
         char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[3], char_emb.shape[1], char_emb.shape[2])
         char_emb_modified = self.conv(char_emb_modified)
         char_emb_modified = F.relu(char_emb_modified) 
