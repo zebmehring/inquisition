@@ -121,7 +121,6 @@ class SelfAttention(torch.nn.Module):
 	:param mask: tensor with shape (batch_size, seq_len) 
         :return:
         """
-        #pdb.set_trace()
 
         """
         attention_outputs = None
