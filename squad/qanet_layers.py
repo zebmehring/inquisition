@@ -95,8 +95,14 @@ class SelfAttention(torch.nn.Module):
         self.num_attn_heads = num_attn_heads
         self.hidden_size = hidden_size
 
+        # MAYBE PROJECT BEFORE INPUTTING TO MHA!
+
         # TEMPORARY!!! FOR TESTING
         self.att = nn.MultiheadAttention(hidden_size, num_attn_heads, bias=False)
+        
+        self.w_q = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
+        self.w_k = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
+        self.w_v = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=False)
 
         """
         self.Qs = ModuleList([torch.nn.Linear(
@@ -141,10 +147,10 @@ class SelfAttention(torch.nn.Module):
 
         return output
         """
-        temp_x = torch.transpose(x, 0, 1)
+        x = torch.transpose(x, 0, 1)
         #temp_x = temp_x.repeat(1,1, self.num_attn_heads)
-        output = self.att(temp_x, temp_x, temp_x, key_padding_mask = ~mask)[0]
-        return torch.transpose(output, 0, 1)
+        x = self.att(self.w_q(x), self.w_k(x), self.w_v(x), key_padding_mask = ~mask)[0]
+        return torch.transpose(x, 0, 1)
 
 
 class EncoderBlock(torch.nn.Module):
@@ -203,20 +209,20 @@ class EncoderBlock(torch.nn.Module):
         output = self.position_encoder(x) # (batch_size, seq_len, hidden_size)
 
         for i, conv in enumerate(self.convs):
-            residual = output
+            residual = torch.clone(output)
             output = self.layer_norms[i](output)
             output = F.dropout(output, self.drop_prob, self.training)
             output = conv(output.transpose(-1,-2)).transpose(-1,-2)# by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = F.relu(output)
             output = output + residual
 
-        residual = output
+        residual = torch.clone(output)
         output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
         output = F.dropout(output, self.drop_prob, self.training)
         output = self.att(output, x_mask)
         output = output + residual
 
-        residual = output
+        residual = torch.clone(output)
         output = self.layer_norms[self.num_convs+1](output)
         output = F.dropout(output, self.drop_prob, self.training)
         output = relu(self.ff(output.transpose(-1,-2)).transpose(-1,-2))
@@ -255,9 +261,7 @@ class PositionEncoder(torch.nn.Module):
         positions = torch.arange(max_seq_len).reshape(-1, 1)
         positions = positions.repeat(1, hidden_size // 2) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
 
-
         self.position_encodings = torch.zeros((max_seq_len, hidden_size)).to(device)
-
 
         self.position_encodings[:, 0::2] = torch.sin(positions / frequencies)
         self.position_encodings[:, 1::2] = torch.cos(positions / frequencies)
@@ -313,12 +317,11 @@ class Embedding(nn.Module):
         word_emb = self.word_embed(word_idxs)   # (batch_size, seq_len, word_embed_size)
         char_emb = self.char_embed(char_idxs) # (batch_size, seq_len, word_len, char_embed_size)
 
-        char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
-        char_emb_modified = char_emb.view(char_emb.shape[0], char_emb.shape[3], char_emb.shape[1], char_emb.shape[2]) # shape (batch_size, char_embed_size, seq_len, word_len)
-        char_emb_modified = self.conv(char_emb_modified) # shape (batch_size, char_embed_size, seq_len, word_len)
-        char_emb_modified = F.relu(char_emb_modified) # shape (batch_size, hidden_size, seq_len, word_len) 
-        char_emb_modified = torch.max(char_emb_modified, dim=-1)[0] # (batch_size, hidden_size, seq_len)
-        char_emb = char_emb_modified.permute(0,2,1) # shape (batch_size, seq_len, hidden_size)
+        char_emb = char_emb.permute(0, 3, 1, 2) # shape (batch_size, char_embed_size, seq_len, word_len)
+        char_emb = self.conv(char_emb) # shape (batch_size, char_embed_size, seq_len, word_len)
+        char_emb = F.relu(char_emb) # shape (batch_size, hidden_size, seq_len, word_len) 
+        char_emb = torch.max(char_emb, dim=-1)[0] # (batch_size, hidden_size, seq_len)
+        char_emb = char_emb.permute(0,2,1) # shape (batch_size, seq_len, hidden_size)
         char_emb = F.dropout(char_emb, self.drop_prob // 2, self.training)
 
         word_emb = F.dropout(word_emb, self.drop_prob, self.training) # shape (batch_size, seq_len, word_embed_size)

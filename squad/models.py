@@ -72,8 +72,8 @@ class QANet(nn.Module):
         #c_enc = self.enc(c_emb, c_len)
         #q_enc = self.enc(q_emb, q_len)
 
-        c_enc = torch.clone(c_emb)
-        q_enc = torch.clone(q_emb)
+        c_enc = c_emb 
+        q_enc = q_emb 
         for i in range(len(self.emb_encs)):
             c_enc = self.emb_encs[i](c_enc, c_mask)    # (batch_size, max_context_len, hidden_size)
             q_enc = self.emb_encs[i](q_enc, q_mask)    # (batch_size, max_query_len, hidden_size)
