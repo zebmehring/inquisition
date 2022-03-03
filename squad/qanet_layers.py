@@ -255,9 +255,6 @@ class PositionEncoder(torch.nn.Module):
         freq_indices = torch.arange(hidden_size//2)#.repeat_interleave(2)
         frequencies = torch.pow(10000, (2*freq_indices)/hidden_size)
 
-
-        #frequencies = torch.pow(10000, 2 * ((hidden_size // 2) / )
-
         positions = torch.arange(max_seq_len).reshape(-1, 1)
         positions = positions.repeat(1, hidden_size // 2) # shape (max_seq_len, hidden-size // 2). These are the t values in p_t
 
