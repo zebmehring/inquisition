@@ -82,7 +82,8 @@ def main(args):
     #LR = 0.001
     optimizer = optim.Adam(model.parameters(), 1, 
                                weight_decay=3e-7, betas=(0.8, 0.999))
-    scheduler = sched.LambdaLR(optimizer, lambda s: np.log(s+1) / (np.log(1000) * 1000) if s < 1000 else 0.001)  
+    scheduler = sched.LambdaLR(optimizer, lambda s: np.log(s+1) / (np.log(1000) * 1000) if s < 1000 else 0.001)
+    #scheduler = sched.LambdaLR(optimizer, lambda s: 0.001 * (1 / (1 + np.exp( (-1 * s) / 100) ) ) if s < 1000 else 0.001)  
 
     # Get data loader
     log.info('Building dataset...')

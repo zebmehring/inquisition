@@ -33,27 +33,20 @@ class QANet(nn.Module):
     """
     def __init__(self, word_vectors, character_vectors, hidden_size, device, drop_prob, num_enc_blocks=[1,5]):
         super(QANet, self).__init__()
+
         self.emb = qanet_layers.Embedding(word_vectors=word_vectors,
                                     character_vectors = character_vectors,
                                     hidden_size=hidden_size,
                                     drop_prob=drop_prob)
 
-        self.enc = qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device, drop_prob = drop_prob,
-                                             num_convs=4,
-                                             num_attn_heads=8,
-                                             kernel_size=7)
-
+        self.emb_encs = nn.ModuleList([qanet_layers.EncoderBlock(hidden_size = hidden_size, device=device, drop_prob = drop_prob, num_convs=4, num_attn_heads=8, kernel_size=7) for _ in range(num_enc_blocks[0])]) 
 
         self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
 
-        self.mod = qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device, drop_prob = drop_prob,
-                                     num_convs=2,
-                                     num_attn_heads=8,
-                                     kernel_size=5)
+        self.mod_encs = nn.ModuleList([qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device, drop_prob = drop_prob, num_convs=2, num_attn_heads=8, kernel_size=5) for _ in range(num_enc_blocks[1])])
 
         self.out = qanet_layers.OutputLayer(hidden_size = hidden_size)
 
-        self.num_enc_blocks = [1,5]
 
     def forward(self, cw_idxs, cc_idxs, qw_idxs, qc_idxs):
 
@@ -79,9 +72,11 @@ class QANet(nn.Module):
         #c_enc = self.enc(c_emb, c_len)
         #q_enc = self.enc(q_emb, q_len)
 
-        for i in range(self.num_enc_blocks[0]):
-            c_enc = self.enc(c_emb, c_mask)    # (batch_size, max_context_len, hidden_size)
-            q_enc = self.enc(q_emb, q_mask)    # (batch_size, max_query_len, hidden_size)
+        c_enc = torch.clone(c_emb)
+        q_enc = torch.clone(q_emb)
+        for i in range(len(self.emb_encs)):
+            c_enc = self.emb_encs[i](c_enc, c_mask)    # (batch_size, max_context_len, hidden_size)
+            q_enc = self.emb_encs[i](q_enc, q_mask)    # (batch_size, max_query_len, hidden_size)
 
 
 
@@ -93,10 +88,11 @@ class QANet(nn.Module):
         # there are three layers of encoder block stacks.
         # each shares parameters (i.e. is the same block stack)
         # so we just run our output through this three times and save some intermediate outputs.
+        mod = att 
         for _ in range(3):
-            for i in range(self.num_enc_blocks[1]):
-                mod = self.mod(att, c_mask)        # (batch_size, c_len, 4 * hidden_size)
-            mods.append(mod)
+            for i in range(len(self.mod_encs)):
+                mod = self.mod_encs[i](mod, c_mask)        # (batch_size, c_len, 4 * hidden_size)
+            mods.append(torch.clone(mod))
 
         #mod = self.mod(att, c_mask)
 
