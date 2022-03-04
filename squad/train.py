@@ -24,6 +24,8 @@ from ujson import load as json_load
 from util import collate_fn, SQuAD
 
 
+
+
 def main(args):
     # Set up logging and devices
     args.save_dir = util.get_save_dir(args.save_dir, args.name, training=True)
@@ -52,9 +54,9 @@ def main(args):
                   hidden_size=args.hidden_size,
                   drop_prob=args.drop_prob)
     """
-    model = QANet(word_vectors = word_vectors,
+    model = QANet(word_vectors = word_vectors, device=device,
                   character_vectors = character_vectors,
-                  hidden_size = args.hidden_size,
+                  hidden_size = 128, #args.hidden_size,
                   drop_prob = args.drop_prob)
     model = nn.DataParallel(model, args.gpu_ids)
     if args.load_path:
@@ -74,8 +76,16 @@ def main(args):
                                  log=log)
 
     # Get optimizer and scheduler
-    optimizer = optim.Adadelta(model.parameters(), args.lr,
-                               weight_decay=args.l2_wd)
+    # set learning rate to 1 here because that LR is multiplied into the schedulerlR and the scheduler
+    # LR fully specifies the correct learning rate. 
+    #WARMUP_STEPS = 1000
+    #LR = 0.001
+    #optimizer = optim.Adam(model.parameters(), 1, 
+    #                           weight_decay=3e-7, betas=(0.8, 0.999))
+
+    #scheduler = sched.LambdaLR(optimizer, lambda s: np.log(s+1) / (np.log(1000) * 1000) if s < 1000 else 0.001)
+    #scheduler = sched.LambdaLR(optimizer, lambda s: 0.001 * (1 / (1 + np.exp( (-1 * s) / 100) ) ) if s < 1000 else 0.001)  
+    optimizer = optim.Adadelta(model.parameters(), args.lr, weight_decay=args.l2_wd)
     scheduler = sched.LambdaLR(optimizer, lambda s: 1.)  # Constant LR
 
     # Get data loader
