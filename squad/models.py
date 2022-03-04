@@ -92,8 +92,7 @@ class QANet(nn.Module):
         for _ in range(3):
             for i in range(len(self.mod_encs)):
                 mod = self.mod_encs[i](mod, c_mask)        # (batch_size, c_len, 4 * hidden_size)
-            mods.append(torch.clone(mod))
-
+            mods.append(mod)
         #mod = self.mod(att, c_mask)
 
         #out = self.out(att, mod, c_mask)  # 2 tensors, each (batch_size, c_len)

@@ -209,20 +209,20 @@ class EncoderBlock(torch.nn.Module):
         output = self.position_encoder(x) # (batch_size, seq_len, hidden_size)
 
         for i, conv in enumerate(self.convs):
-            residual = torch.clone(output)
+            residual = output 
             output = self.layer_norms[i](output)
             output = F.dropout(output, self.drop_prob, self.training)
             output = conv(output.transpose(-1,-2)).transpose(-1,-2)# by transposing it, we get (batch_size, hidden_size, seq_len). Looking at the conv1d docs, this makes our in_channels equal to hidden_size as desired.
             output = F.relu(output)
             output = output + residual
 
-        residual = torch.clone(output)
+        residual = output 
         output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
         output = F.dropout(output, self.drop_prob, self.training)
         output = self.att(output, x_mask)
         output = output + residual
 
-        residual = torch.clone(output)
+        residual = output 
         output = self.layer_norms[self.num_convs+1](output)
         output = F.dropout(output, self.drop_prob, self.training)
         output = relu(self.ff(output.transpose(-1,-2)).transpose(-1,-2))
