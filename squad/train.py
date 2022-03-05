@@ -161,6 +161,7 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 tbx.add_scalar('train/LR',
                                optimizer.param_groups[0]['lr'],
                                step)
+                tbx.add_scalar('train/MEMORY', torch.cuda.memory_allocated(), step)
 
                 steps_till_eval -= batch_size
                 if steps_till_eval <= 0:
