@@ -13,6 +13,8 @@ from torch.nn.functional import layer_norm
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 
+from trax.layers.research.efficient_attention import LSHSelfAttention
+
 
 import pdb
 
@@ -182,6 +184,10 @@ class LSHSelfAttention(torch.nn.Module):
                              out_features=hidden_size, bias=False)
         self.w_v = nn.Linear(in_features=hidden_size,
                              out_features=hidden_size, bias=False)
+        
+        self.att = LSHSelfAttention(n_heads=num_attn_heads, d_qk=hidden_size, 
+                                    d_v=hidden_size, share_qk=True, masked=True,
+                                    chunk_len=128, n_hashes=2)
 
         """
         self.Qs = ModuleList([torch.nn.Linear(
@@ -199,17 +205,16 @@ class LSHSelfAttention(torch.nn.Module):
         rotations = x @ self.r
         return torch.argmax(torch.cat((rotations, -rotations)), dim=-1)
 
-    def forward(self, x, mask=None):
+    def forward(self, x):
         """
         :param x: has shape (batch_size, seq_len, hidden_size)
-        :param mask: tensor with shape (batch_size, seq_len) 
-        :return:
         """
+        
+        return self.att(x)
 
+        """
         q = self.w_q(x)
         v = self.w_v(x)
-
-        """
         bucket_hashes, inverse_indices = torch.unique(self.hash(q), sorted=True,
         inverse_indices=True)
         # TODO: avoid using a dictionary here
