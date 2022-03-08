@@ -168,7 +168,7 @@ class SelfAttention(torch.nn.Module):
 
 
 class LSHSelfAttention(torch.nn.Module):
-    def __init__(self, hidden_size, num_attn_heads, num_hashes=128):
+    def __init__(self, hidden_size, num_attn_heads, masked=False, num_hashes=2):
         """
 
         :param hidden_size (int): hidden size of input
@@ -185,9 +185,11 @@ class LSHSelfAttention(torch.nn.Module):
         self.w_v = nn.Linear(in_features=hidden_size,
                              out_features=hidden_size, bias=False)
         
+        # The major issue with this is that it isn't a PyTorch module. I'm not sure
+        # whether or not it'll play nicely with training. 
         self.att = LSHSelfAttention(n_heads=num_attn_heads, d_qk=hidden_size, 
-                                    d_v=hidden_size, share_qk=True, masked=True,
-                                    chunk_len=128, n_hashes=2)
+                                    d_v=hidden_size, share_qk=True, masked=masked,
+                                    chunk_len=128, n_hashes=num_hashes)
 
         """
         self.Qs = ModuleList([torch.nn.Linear(
