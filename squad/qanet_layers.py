@@ -165,6 +165,69 @@ class SelfAttention(torch.nn.Module):
         return torch.transpose(x, 0, 1)
 
 
+class LSHSelfAttention(torch.nn.Module):
+    def __init__(self, hidden_size, num_attn_heads, num_hashes=128):
+        """
+
+        :param hidden_size (int): hidden size of input
+        :param num_attn_heads (int): the number of attention heads
+        """
+        super(LSHSelfAttention, self).__init__()
+        self.num_attn_heads = num_attn_heads
+        self.hidden_size = hidden_size
+
+        self.r = torch.rand((hidden_size, num_hashes // 2))
+
+        self.w_q = nn.Linear(in_features=hidden_size,
+                             out_features=hidden_size, bias=False)
+        self.w_v = nn.Linear(in_features=hidden_size,
+                             out_features=hidden_size, bias=False)
+
+        """
+        self.Qs = ModuleList([torch.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, bias=False)
+            for _ in range(num_attn_heads)])
+        self.Vs = ModuleList([torch.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, bias=False)
+            for _ in range(num_attn_heads)])
+
+        self.proj = nn.Linear(in_features=num_attn_heads * hidden_size,
+                              out_features=hidden_size, bias=False)
+        """
+
+    def hash(self, x):
+        rotations = x @ self.r
+        return torch.argmax(torch.cat((rotations, -rotations)), dim=-1)
+
+    def forward(self, x, mask=None):
+        """
+        :param x: has shape (batch_size, seq_len, hidden_size)
+        :param mask: tensor with shape (batch_size, seq_len) 
+        :return:
+        """
+
+        q = self.w_q(x)
+        v = self.w_v(x)
+
+        """
+        bucket_hashes, inverse_indices = torch.unique(self.hash(q), sorted=True,
+        inverse_indices=True)
+        # TODO: avoid using a dictionary here
+        buckets = {}
+        for h in bucket_hashes:
+            buckets[h] = q[inverse_indices == h], v[inverse_indices == h]
+        outputs = {}
+        # TODO: avoid using a dictionary here
+        for bucket, value in buckets.values():
+            outputs[h] = softmax(bucket @ bucket.T) @ value
+        # TODO: re-insert 0s into the softmax somehow
+        output = torch.cat((*outputs.values()), dim=-1)
+        # TODO: handle the multi-head case
+        """
+
+        return x
+
+
 class EncoderBlock(torch.nn.Module):
     """Encoder block subnetwork, as described in the QANet paper.
 
