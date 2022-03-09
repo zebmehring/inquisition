@@ -14,5 +14,6 @@ dependencies:
   - tensorboardX
   - tqdm
   - urllib3
+  - git+https://github.com/lucidrains/reformer-pytorch
   - pip:
     - torch==1.7.1
