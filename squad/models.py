@@ -9,8 +9,6 @@ import qanet_layers
 import torch
 import torch.nn as nn
 
-from reformer_pytorch.reformer_pytorch import LSHSelfAttention
-
 import pdb
 
 
@@ -45,8 +43,8 @@ class QANet(nn.Module):
         self.emb_encs = nn.ModuleList([qanet_layers.EncoderBlock(hidden_size=hidden_size, device=device,
                                       drop_prob=drop_prob, num_convs=4, num_attn_heads=8, kernel_size=7) for _ in range(num_enc_blocks[0])])
 
-        # self.att = layers.BiDAFAttention(hidden_size=hidden_size, drop_prob = drop_prob)
-        self.att = LSHSelfAttention(dim=hidden_size, dropout=drop_prob)
+        self.att = layers.BiDAFAttention(
+            hidden_size=hidden_size, drop_prob=drop_prob)
 
         self.mod_encs = nn.ModuleList([qanet_layers.EncoderBlock(hidden_size=4*hidden_size, device=device,
                                       drop_prob=drop_prob, num_convs=2, num_attn_heads=8, kernel_size=5) for _ in range(num_enc_blocks[1])])

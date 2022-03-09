@@ -1,19 +1,20 @@
 name: squad
 channels:
-  - pytorch
-  - conda-forge
-  - defaults
+    - pytorch
+    - conda-forge
+    - defaults
 dependencies:
-  - python=3.6.8
-  - ujson
-  - numpy
-  - pip
-  - spacy=2.0.16
-  - tensorboard
-  - tensorflow
-  - tensorboardX
-  - tqdm
-  - urllib3
-  - git+https://github.com/lucidrains/reformer-pytorch
-  - pip:
-    - torch==1.7.1
+    - python=3.6.8
+    - ujson
+    - numpy
+    - pip
+    - spacy=2.0.16
+    - tensorboard
+    - tensorflow
+    - tensorboardX
+    - tqdm
+    - urllib3
+    - git+https://github.com/lucidrains/reformer-pytorch
+    - trax
+    - pip:
+          - torch==1.7.1

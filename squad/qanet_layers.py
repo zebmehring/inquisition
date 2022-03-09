@@ -13,8 +13,8 @@ from torch.nn.functional import layer_norm
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 
-from trax.layers.research.efficient_attention import LSHSelfAttention
-
+# from trax.layers.research.efficient_attention import LSHSelfAttention
+from reformer_pytorch.reformer_pytorch import LSHSelfAttention
 
 import pdb
 
@@ -167,74 +167,6 @@ class SelfAttention(torch.nn.Module):
         return torch.transpose(x, 0, 1)
 
 
-class LSHSelfAttention(torch.nn.Module):
-    def __init__(self, hidden_size, num_attn_heads, masked=False, num_hashes=2):
-        """
-
-        :param hidden_size (int): hidden size of input
-        :param num_attn_heads (int): the number of attention heads
-        """
-        super(LSHSelfAttention, self).__init__()
-        self.num_attn_heads = num_attn_heads
-        self.hidden_size = hidden_size
-
-        self.r = torch.rand((hidden_size, num_hashes // 2))
-
-        self.w_q = nn.Linear(in_features=hidden_size,
-                             out_features=hidden_size, bias=False)
-        self.w_v = nn.Linear(in_features=hidden_size,
-                             out_features=hidden_size, bias=False)
-        
-        # The major issue with this is that it isn't a PyTorch module. I'm not sure
-        # whether or not it'll play nicely with training. 
-        self.att = LSHSelfAttention(n_heads=num_attn_heads, d_qk=hidden_size, 
-                                    d_v=hidden_size, share_qk=True, masked=masked,
-                                    chunk_len=128, n_hashes=num_hashes)
-
-        """
-        self.Qs = ModuleList([torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-            for _ in range(num_attn_heads)])
-        self.Vs = ModuleList([torch.nn.Linear(
-            in_features=hidden_size, out_features=hidden_size, bias=False)
-            for _ in range(num_attn_heads)])
-
-        self.proj = nn.Linear(in_features=num_attn_heads * hidden_size,
-                              out_features=hidden_size, bias=False)
-        """
-
-    def hash(self, x):
-        rotations = x @ self.r
-        return torch.argmax(torch.cat((rotations, -rotations)), dim=-1)
-
-    def forward(self, x):
-        """
-        :param x: has shape (batch_size, seq_len, hidden_size)
-        """
-        
-        return self.att(x)
-
-        """
-        q = self.w_q(x)
-        v = self.w_v(x)
-        bucket_hashes, inverse_indices = torch.unique(self.hash(q), sorted=True,
-        inverse_indices=True)
-        # TODO: avoid using a dictionary here
-        buckets = {}
-        for h in bucket_hashes:
-            buckets[h] = q[inverse_indices == h], v[inverse_indices == h]
-        outputs = {}
-        # TODO: avoid using a dictionary here
-        for bucket, value in buckets.values():
-            outputs[h] = softmax(bucket @ bucket.T) @ value
-        # TODO: re-insert 0s into the softmax somehow
-        output = torch.cat((*outputs.values()), dim=-1)
-        # TODO: handle the multi-head case
-        """
-
-        return x
-
-
 class EncoderBlock(torch.nn.Module):
     """Encoder block subnetwork, as described in the QANet paper.
 
@@ -277,7 +209,9 @@ class EncoderBlock(torch.nn.Module):
         self.layer_norms = ModuleList(
             [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
 
-        self.att = SelfAttention(hidden_size, num_attn_heads)
+        # self.att = SelfAttention(hidden_size, num_attn_heads)
+        self.att = LSHSelfAttention(
+            dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=164)
 
         # TA said to use kenrel_size = 1 and padding = 0 for these
         self.ff = nn.Conv1d(in_channels=hidden_size,
@@ -306,7 +240,7 @@ class EncoderBlock(torch.nn.Module):
         output = self.layer_norms[self.num_convs](
             output)  # (batch_size, seq_len, hidden_size)
         output = F.dropout(output, self.drop_prob, self.training)
-        output = self.att(output, x_mask)
+        output = self.att(output, input_mask=x_mask)
         output = output + residual
 
         residual = output
