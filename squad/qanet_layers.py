@@ -211,7 +211,7 @@ class EncoderBlock(torch.nn.Module):
 
         # self.att = SelfAttention(hidden_size, num_attn_heads)
         self.att = LSHSelfAttention(
-            dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=164)
+            dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=32)
 
         # TA said to use kenrel_size = 1 and padding = 0 for these
         self.ff = nn.Conv1d(in_channels=hidden_size,

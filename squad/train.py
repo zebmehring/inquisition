@@ -94,17 +94,13 @@ def main(args):
                                    batch_size=args.batch_size,
                                    shuffle=True,
                                    num_workers=args.num_workers,
-                                   collate_fn=lambda examples: collate_fn(examples,
-                                                                          train_dataset.max_question_seqlen,
-                                                                          train_dataset.max_context_seqlen))
+                                   collate_fn=collate_fn)
     dev_dataset = SQuAD(args.dev_record_file, args.use_squad_v2)
     dev_loader = data.DataLoader(dev_dataset,
                                  batch_size=args.batch_size,
                                  shuffle=False,
                                  num_workers=args.num_workers,
-                                 collate_fn=lambda examples: collate_fn(examples,
-                                                                        dev_dataset.max_question_seqlen,
-                                                                        dev_dataset.max_context_seqlen))
+                                 collate_fn=collate_fn)
 
     # Train
     train(log, step, args, train_dataset, train_loader, device, optimizer,
