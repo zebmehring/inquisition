@@ -3,7 +3,7 @@
 Author:
     Chris Chute (chute@stanford.edu)
 """
-
+import time
 import numpy as np
 import random
 import torch
@@ -113,6 +113,8 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
     log.info('Training...')
     steps_till_eval = args.eval_steps
     epoch = step // len(train_dataset)
+    total_memory = 0
+    total_time = 0
     while epoch != args.num_epochs:
         epoch += 1
         log.info(f'Starting epoch {epoch}...')
@@ -122,6 +124,7 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 # ADD IN CHARACTER EMBEDDINGS HERE!!!!
                 # BASICALLY, WE CAN LOAD THE PRETRAIEND VECTORS ABOVE AND PASS THEM TO TEH MODEL
                 # BUT, HERE IS WHERE WE WILL ACTUALLY GET THE INDINCES FOR THE CHARS AND PASS THEM IN
+                start_time = time.time()
 
                 # Setup for forward
                 cw_idxs = cw_idxs.to(device)
@@ -161,6 +164,10 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 tbx.add_scalar('train/LR',
                                optimizer.param_groups[0]['lr'],
                                step)
+                total_time += time.time() - start_time
+                total_memory += torch.cuda.memory_allocated()
+                tbx.add_scalar("MEMORY", total_memory, step)
+                tbx.add_scalar("TIME", total_time, step)
 
                 steps_till_eval -= batch_size
                 if steps_till_eval <= 0:
