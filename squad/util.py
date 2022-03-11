@@ -71,6 +71,9 @@ class SQuAD(data.Dataset):
         self.valid_idxs = [idx for idx in range(len(self.ids))
                            if use_v2 or self.y1s[idx].item() >= 0]
 
+        self.max_question_seqlen = None
+        self.max_context_seqlen = None
+
     def __getitem__(self, idx):
         idx = self.valid_idxs[idx]
         example = (self.context_idxs[idx],
@@ -87,7 +90,7 @@ class SQuAD(data.Dataset):
         return len(self.valid_idxs)
 
 
-def collate_fn(examples):
+def collate_fn(examples, max_question_seqlen=None, max_context_seqlen=None):
     """Create batch tensors from a list of individual examples returned
     by `SQuAD.__getitem__`. Merge examples of different length by padding
     all examples to the maximum length in the batch.

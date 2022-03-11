@@ -24,8 +24,6 @@ from ujson import load as json_load
 from util import collate_fn, SQuAD
 
 
-
-
 def main(args):
     # Set up logging and devices
     args.save_dir = util.get_save_dir(args.save_dir, args.name, training=True)
@@ -54,10 +52,10 @@ def main(args):
                   hidden_size=args.hidden_size,
                   drop_prob=args.drop_prob)
     """
-    model = QANet(word_vectors = word_vectors, device=device,
-                  character_vectors = character_vectors,
-                  hidden_size = 128, #args.hidden_size,
-                  drop_prob = args.drop_prob)
+    model = QANet(word_vectors=word_vectors, device=device,
+                  character_vectors=character_vectors,
+                  hidden_size=128,  # args.hidden_size,
+                  drop_prob=args.drop_prob)
     model = nn.DataParallel(model, args.gpu_ids)
     if args.load_path:
         log.info(f'Loading checkpoint from {args.load_path}...')
@@ -77,15 +75,16 @@ def main(args):
 
     # Get optimizer and scheduler
     # set learning rate to 1 here because that LR is multiplied into the schedulerlR and the scheduler
-    # LR fully specifies the correct learning rate. 
+    # LR fully specifies the correct learning rate.
     #WARMUP_STEPS = 1000
     #LR = 0.001
-    #optimizer = optim.Adam(model.parameters(), 1, 
+    # optimizer = optim.Adam(model.parameters(), 1,
     #                           weight_decay=3e-7, betas=(0.8, 0.999))
 
     #scheduler = sched.LambdaLR(optimizer, lambda s: np.log(s+1) / (np.log(1000) * 1000) if s < 1000 else 0.001)
-    #scheduler = sched.LambdaLR(optimizer, lambda s: 0.001 * (1 / (1 + np.exp( (-1 * s) / 100) ) ) if s < 1000 else 0.001)  
-    optimizer = optim.Adadelta(model.parameters(), args.lr, weight_decay=args.l2_wd)
+    #scheduler = sched.LambdaLR(optimizer, lambda s: 0.001 * (1 / (1 + np.exp( (-1 * s) / 100) ) ) if s < 1000 else 0.001)
+    optimizer = optim.Adadelta(
+        model.parameters(), args.lr, weight_decay=args.l2_wd)
     scheduler = sched.LambdaLR(optimizer, lambda s: 1.)  # Constant LR
 
     # Get data loader
@@ -95,17 +94,21 @@ def main(args):
                                    batch_size=args.batch_size,
                                    shuffle=True,
                                    num_workers=args.num_workers,
-                                   collate_fn=collate_fn)
+                                   collate_fn=lambda examples: collate_fn(examples,
+                                                                          train_dataset.max_question_seqlen,
+                                                                          train_dataset.max_context_seqlen))
     dev_dataset = SQuAD(args.dev_record_file, args.use_squad_v2)
     dev_loader = data.DataLoader(dev_dataset,
                                  batch_size=args.batch_size,
                                  shuffle=False,
                                  num_workers=args.num_workers,
-                                 collate_fn=collate_fn)
+                                 collate_fn=lambda examples: collate_fn(examples,
+                                                                        dev_dataset.max_question_seqlen,
+                                                                        dev_dataset.max_context_seqlen))
 
     # Train
-    train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
-
+    train(log, step, args, train_dataset, train_loader, device, optimizer,
+          model, scheduler, ema, tbx, dev_loader, saver, char_embeddings=True)
 
 
 def train(log, step, args, train_dataset, train_loader, device, optimizer, model, scheduler, ema, tbx, dev_loader, saver,
@@ -122,7 +125,6 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                 # ADD IN CHARACTER EMBEDDINGS HERE!!!!
                 # BASICALLY, WE CAN LOAD THE PRETRAIEND VECTORS ABOVE AND PASS THEM TO TEH MODEL
                 # BUT, HERE IS WHERE WE WILL ACTUALLY GET THE INDINCES FOR THE CHARS AND PASS THEM IN
-
 
                 # Setup for forward
                 cw_idxs = cw_idxs.to(device)
@@ -147,7 +149,8 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
 
                 # Backward
                 loss.backward()
-                nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
+                nn.utils.clip_grad_norm_(
+                    model.parameters(), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step(step // batch_size)
                 ema(model, step // batch_size)
@@ -173,12 +176,13 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
                                                   args.dev_eval_file,
                                                   args.max_ans_len,
                                                   args.use_squad_v2,
-                                                  char_embeddings = char_embeddings)
+                                                  char_embeddings=char_embeddings)
                     saver.save(step, model, results[args.metric_name], device)
                     ema.resume(model)
 
                     # Log to console
-                    results_str = ', '.join(f'{k}: {v:05.2f}' for k, v in results.items())
+                    results_str = ', '.join(
+                        f'{k}: {v:05.2f}' for k, v in results.items())
                     log.info(f'Dev {results_str}')
 
                     # Log to TensorBoard
