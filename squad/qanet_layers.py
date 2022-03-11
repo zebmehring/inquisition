@@ -13,8 +13,7 @@ from torch.nn.functional import layer_norm
 from torch.nn.functional import relu
 from torch.nn.functional import softmax
 
-# from trax.layers.research.efficient_attention import LSHSelfAttention
-from reformer_pytorch.reformer_pytorch import LSHSelfAttention
+from reformer_pytorch.reformer_pytorch import Reformer
 
 import pdb
 
@@ -207,17 +206,11 @@ class EncoderBlock(torch.nn.Module):
                                 kernel_size=kernel_size, padding=(kernel_size - 1) // 2) for _ in range(num_convs)])
 
         self.layer_norms = ModuleList(
-            [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
+            [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs)])
 
-        # self.att = SelfAttention(hidden_size, num_attn_heads)
-        self.att = LSHSelfAttention(
-            dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=32)
-
-        # TA said to use kenrel_size = 1 and padding = 0 for these
-        self.ff = nn.Conv1d(in_channels=hidden_size,
-                            out_channels=hidden_size, kernel_size=1, padding=0)
-        self.ff2 = nn.Conv1d(in_channels=hidden_size,
-                             out_channels=hidden_size, kernel_size=1, padding=0)
+        self.reformer = Reformer(dim=hidden_size, depth=1, heads=num_attn_heads,
+                                 n_hashes=2, bucket_size=32,
+                                 lsh_dropout=drop_prob, ff_dropout=drop_prob)
 
     def forward(self, x, x_mask):
         """
@@ -236,19 +229,7 @@ class EncoderBlock(torch.nn.Module):
             output = F.relu(output)
             output = output + residual
 
-        residual = output
-        output = self.layer_norms[self.num_convs](
-            output)  # (batch_size, seq_len, hidden_size)
-        output = F.dropout(output, self.drop_prob, self.training)
-        output = self.att(output, input_mask=x_mask)
-        output = output + residual
-
-        residual = output
-        output = self.layer_norms[self.num_convs+1](output)
-        output = F.dropout(output, self.drop_prob, self.training)
-        output = relu(self.ff(output.transpose(-1, -2)).transpose(-1, -2))
-        output = self.ff2(output.transpose(-1, -2)).transpose(-1, -2)
-        output = output + residual
+        output = self.reformer(output, input_mask=x_mask)
 
         return output
 
