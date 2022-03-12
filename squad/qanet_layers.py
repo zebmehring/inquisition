@@ -220,12 +220,16 @@ class EncoderBlock(torch.nn.Module):
             self.att = LSHSelfAttention(
             dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=32, n_hashes=2)
                     # TA said to use kenrel_size = 1 and padding = 0 for these
+            self.layer_norms = ModuleList(
+            [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
             self.ff = nn.Conv1d(in_channels=hidden_size,
                             out_channels=hidden_size, kernel_size=1, padding=0)
             self.ff2 = nn.Conv1d(in_channels=hidden_size,
                              out_channels=hidden_size, kernel_size=1, padding=0)
         elif style == "original":
             self.att = SelfAttention(hidden_size, num_attn_heads)
+            self.layer_norms = ModuleList(
+            [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs+2)])
 
             # TA said to use kenrel_size = 1 and padding = 0 for these
             self.ff = nn.Conv1d(in_channels=hidden_size,

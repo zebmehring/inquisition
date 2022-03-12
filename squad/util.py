@@ -136,7 +136,7 @@ def collate_fn(examples, max_question_seqlen=None, max_context_seqlen=None):
         #print("max(lengths): {}".format(max(lengths)))
         max_seq_len = max_seq_len_bucket_multiple(lengths)
         #print("max_seq_len_bucket_multiple: {}".format(max_seq_len))
-        padded = torch.zeros(len(arrays), max_seq_len, dtype=dtype)
+        padded = torch.zeros(len(arrays), 448, dtype=dtype)
         for i, seq in enumerate(arrays):
             end = lengths[i]
             end = (seq != pad_value).sum()
@@ -152,7 +152,7 @@ def collate_fn(examples, max_question_seqlen=None, max_context_seqlen=None):
         #print("max(heights): {}".format(max(heights)))
         max_seq_len = max_seq_len_bucket_multiple(heights)
         #print("max_height_bucket: {}".format(max_seq_len))
-        padded = torch.zeros(len(matrices), max(heights), max(widths), dtype=dtype)
+        padded = torch.zeros(len(matrices), 448, max(widths), dtype=dtype)
         for i, seq in enumerate(matrices):
             height, width = heights[i], widths[i]
             height = (seq.sum(1) != pad_value).sum()
