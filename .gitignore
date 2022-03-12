@@ -1,6 +1,7 @@
 .idea/
 squad/data
 squad/save
+squad/nohup.out
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

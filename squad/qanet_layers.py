@@ -181,7 +181,7 @@ class EncoderBlock(torch.nn.Module):
     See https://arxiv.org/pdf/1804.09541.pdf for more details.
     """
 
-    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size, drop_prob):
+    def __init__(self, hidden_size, device, num_convs, num_attn_heads, kernel_size, drop_prob, style):
         """Constructs an encoder block module.
 
         Args:
@@ -208,9 +208,32 @@ class EncoderBlock(torch.nn.Module):
         self.layer_norms = ModuleList(
             [nn.LayerNorm(normalized_shape=hidden_size) for _ in range(num_convs)])
 
-        self.reformer = Reformer(dim=hidden_size, depth=1, heads=num_attn_heads,
+        self.style = style
+        self.att = None
+        self.ff = None
+        self.ff2 = None
+        if style == "reformer":
+            self.reformer = Reformer(dim=hidden_size, depth=1, heads=num_attn_heads,
                                  n_hashes=2, bucket_size=32,
                                  lsh_dropout=drop_prob, ff_dropout=drop_prob)
+        elif style == "lsh":
+            self.att = LSHSelfAttention(
+            dim=hidden_size, heads=num_attn_heads, dropout=drop_prob, bucket_size=32, n_hashes=2)
+                    # TA said to use kenrel_size = 1 and padding = 0 for these
+            self.ff = nn.Conv1d(in_channels=hidden_size,
+                            out_channels=hidden_size, kernel_size=1, padding=0)
+            self.ff2 = nn.Conv1d(in_channels=hidden_size,
+                             out_channels=hidden_size, kernel_size=1, padding=0)
+        elif style == "original":
+            self.att = SelfAttention(hidden_size, num_attn_heads)
+
+            # TA said to use kenrel_size = 1 and padding = 0 for these
+            self.ff = nn.Conv1d(in_channels=hidden_size,
+                            out_channels=hidden_size, kernel_size=1, padding=0)
+            self.ff2 = nn.Conv1d(in_channels=hidden_size,
+                             out_channels=hidden_size, kernel_size=1, padding=0) 
+        else:
+            raise ValueError("Invalid value given in arguments")
 
     def forward(self, x, x_mask):
         """
@@ -229,7 +252,24 @@ class EncoderBlock(torch.nn.Module):
             output = F.relu(output)
             output = output + residual
 
-        output = self.reformer(output, input_mask=x_mask)
+        print(x.shape)
+        if x.shape[1] % 64 != 0:
+            pdb.set_trace()
+        if self.style == "reformer":
+            output = self.reformer(output, input_mask=x_mask)
+        else:
+            residual = output
+            output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
+            output = F.dropout(output, self.drop_prob, self.training)
+            output = self.att(output, x_mask)
+            output = output + residual
+
+            residual = output
+            output = self.layer_norms[self.num_convs+1](output)
+            output = F.dropout(output, self.drop_prob, self.training)
+            output = relu(self.ff(output.transpose(-1,-2)).transpose(-1,-2))
+            output = self.ff2(output.transpose(-1,-2)).transpose(-1,-2)
+            output = output + residual
 
         return output
 

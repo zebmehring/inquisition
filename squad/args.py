@@ -232,7 +232,7 @@ def add_train_test_args(parser):
                         help='Whether to use SQuAD 2.0 (unanswerable) questions.')
     parser.add_argument('--hidden_size',
                         type=int,
-                        default=100,
+                        default=128,
                         help='Number of features in encoder hidden layers.')
     parser.add_argument('--num_visuals',
                         type=int,
@@ -242,3 +242,8 @@ def add_train_test_args(parser):
                         type=str,
                         default=None,
                         help='Path to load as a model checkpoint.')
+    parser.add_argument('--style',
+                        required=False,
+                        type=str,
+                        default="reformer",
+                        help="There are three valid values: reformer, lsh, and original. reformer will use the reformer transformer block in the Encoder Block for the QAnet. LSH just uses LSH attention with everything else the same. Original is the EncoderBlock specification given in the paper.")
