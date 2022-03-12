@@ -252,9 +252,6 @@ class EncoderBlock(torch.nn.Module):
             output = F.relu(output)
             output = output + residual
 
-        print(x.shape)
-        if x.shape[1] % 64 != 0:
-            pdb.set_trace()
         if self.style == "reformer":
             output = self.reformer(output, input_mask=x_mask)
         else:
