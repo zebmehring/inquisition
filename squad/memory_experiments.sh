@@ -1,12 +1,15 @@
 #!/bin/bash
-hidden_dims=(32 64 128 256 512)
+#hidden_dims=(8 16 32 64 100 128 140 150 200 256 512)
+#hidden_dims=(8 16 32 64 128 256)
+hidden_dims=(256)
+#hidden_dims=(140 150 160 170 180)
 styles=("reformer" "original" "lsh")
 for dims in "${hidden_dims[@]}"
 do
     for style in "${styles[@]}"
     do
            echo "memorytest-$dims-$style"
-           python train.py -n "memorytest-$dims-$style" --style=$style --hidden_size=$dims --num_epochs=1 --train_record_file 'data/smaller_train.npz' --dev_record_file 'data/smaller_dev.npz' --eval_steps=16 & 
+           python train.py -n "memorytest-$dims-$style" --style=$style --hidden_size=$dims --num_epochs=1 --train_record_file 'data/smaller_train.npz' --dev_record_file 'data/smaller_dev.npz' & 
            wait
     done
 done
