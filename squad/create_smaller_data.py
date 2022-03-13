@@ -1,7 +1,9 @@
 import numpy as np
 import pdb
 
-SIZE_OF_SMALLER_TRAIN_SET = 16 #3 #100 #3 #1000 # this will be three batches
+SIZE_OF_SMALLER_TRAIN_SET = 32 #3 #100 #3 #1000 # this will be three batches
+
+np.random.seed(224)
 
 def shuffle_data(data):
     context_idxs=data['context_idxs'] 

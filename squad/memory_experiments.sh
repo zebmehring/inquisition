@@ -6,7 +6,7 @@ do
     for style in "${styles[@]}"
     do
            echo "memorytest-$dims-$style"
-           python train.py -n "memorytest-$dims-$style" --style=$style --hidden_size=$dims --num_epochs=1 --train_record_file 'data/smaller_train.npz' --dev_record_file 'data/smaller_dev.npz' & 
+           python train.py -n "memorytest-$dims-$style" --style=$style --hidden_size=$dims --num_epochs=1 --train_record_file 'data/smaller_train.npz' --dev_record_file 'data/smaller_dev.npz' --eval_steps=16 & 
            wait
     done
 done
