@@ -11,7 +11,7 @@ import pdb
 
 regex = re.compile('^events.out.tfevents*')
 
-hidden_dims = [32, 64, 128, 256, 512]
+hidden_dims = [32, 64, 128, 256]#, 512]
 styles = ["reformer", "original", "lsh"]
 
 SCALARS_OF_INTEREST = ["train/MEMORY", "train/TIME"]
@@ -27,13 +27,17 @@ def get_log_file_path(dims, style):
 for style in styles:
     scalars = {scalar: list() for scalar in SCALARS_OF_INTEREST}
     for dims in hidden_dims:
-        log_file_path = get_log_file_path(dims, style)
-        event_acc = EventAccumulator(log_file_path)
-        pdb.set_trace()
-        
-        for SCALAR in SCALARS_OF_INTEREST:
-            event = event_acc.Scalars(SCALAR)[0] # just use the first one
-            scalar = event.value
-            scalars[SCALAR].append(scalar)
+        print("{}, {}".format(style, dims))
+        try:
+            log_file_path = get_log_file_path(dims, style)
+            event_acc = EventAccumulator(log_file_path)
+            event_acc.Reload() # necessary to load in the dataa
+            
+            for SCALAR in SCALARS_OF_INTEREST:
+                event = event_acc.Scalars(SCALAR)[0] # just use the first one
+                scalar = event.value
+                scalars[SCALAR].append(scalar)
+        except:
+            print('exception for {}, {}'.format(style, dims))
             
     print(scalars)
