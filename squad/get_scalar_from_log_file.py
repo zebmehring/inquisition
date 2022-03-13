@@ -1,25 +1,39 @@
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import argparse
+import re
+import os
+import pdb
+#import argparse
 
 # finish this off later.
 
-parser = argparse.ArgumentParser()
-parser.parse_args()
+#parser = argparse.ArgumentParser()
+#parser.parse_args()
 
+regex = re.compile('^events.out.tfevents*')
 
+hidden_dims = [32, 64, 128, 256, 512]
+styles = ["reformer", "original", "lsh"]
 
-
-log_file_path = ""
 SCALARS_OF_INTEREST = ["train/MEMORY", "train/TIME"]
-event_acc = EventAccumulator(log_file_path)
 
-for SCALAR in SCALARS_OF_INTEREST:
-    """
-    >>> event_acc.Scalars('train/MEMORY')
-[ScalarEvent(wall_time=1647074191.7343554, step=16, value=932629504.0), ScalarEvent(wall_time=1647074197.6242537, step=32, value=1865259008.0), ScalarEvent(wall_time=1647074204.2224517, step=48, value=2797888512.0), ScalarEvent(wall_time=1647074209.802795, step=50, value=3327046656.0)]
->>> event_acc.Scalars('train/MEMORY')[0].value
-    """
-    for event in event_acc.Scalars(SCALAR):
-       print(event.value)
-       print(event.step)
+def get_log_file_path(dims, style):
+    log_dir = "save/train/memorytest-{}-{}-01".format(dims, style)
+    for _, _, files in os.walk(log_dir):
+        for f in files:
+            if regex.match(f):
+                return os.path.join(log_dir, f)
+    return None
 
+for style in styles:
+    scalars = {scalar: list() for scalar in SCALARS_OF_INTEREST}
+    for dims in hidden_dims:
+        log_file_path = get_log_file_path(dims, style)
+        event_acc = EventAccumulator(log_file_path)
+        pdb.set_trace()
+        
+        for SCALAR in SCALARS_OF_INTEREST:
+            event = event_acc.Scalars(SCALAR)[0] # just use the first one
+            scalar = event.value
+            scalars[SCALAR].append(scalar)
+            
+    print(scalars)

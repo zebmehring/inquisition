@@ -263,7 +263,10 @@ class EncoderBlock(torch.nn.Module):
             residual = output
             output = self.layer_norms[self.num_convs](output) # (batch_size, seq_len, hidden_size)
             output = F.dropout(output, self.drop_prob, self.training)
-            output = self.att(output, x_mask)
+            if self.style=="lsh":
+                output = self.att(output, input_mask=x_mask)
+            else:
+                output = self.att(output, x_mask)
             output = output + residual
 
             residual = output
