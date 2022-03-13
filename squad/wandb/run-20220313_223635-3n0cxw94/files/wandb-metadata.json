@@ -1,0 +1,34 @@
+{
+    "os": "Linux-5.4.0-1072-azure-x86_64-with-debian-buster-sid",
+    "python": "3.6.8",
+    "heartbeatAt": "2022-03-13T22:36:37.614075",
+    "startedAt": "2022-03-13T22:36:35.404974",
+    "docker": null,
+    "gpu": "Tesla V100-PCIE-16GB",
+    "gpu_count": 1,
+    "cpu_count": 6,
+    "cuda": null,
+    "args": [
+        "-n",
+        "memorytest-32-reformer",
+        "--style=reformer",
+        "--hidden_size=32",
+        "--num_epochs=1",
+        "--train_record_file",
+        "data/smaller_train.npz",
+        "--dev_record_file",
+        "data/smaller_dev.npz"
+    ],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "squad/train.py",
+    "git": {
+        "remote": "git@github.com:zebmehring/inquisition.git",
+        "commit": "622799e9920a6af9b5aadccfff2ae96b9f24073c"
+    },
+    "email": null,
+    "root": "/home/ag/inquisition",
+    "host": "project2",
+    "username": "ag",
+    "executable": "/anaconda/envs/lsh/bin/python"
+}

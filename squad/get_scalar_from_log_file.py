@@ -12,12 +12,16 @@ import matplotlib.pyplot as plt
 #parser = argparse.ArgumentParser()
 #parser.parse_args()
 
+FIGSIZE=(9,5)
+
 regex = re.compile('^events.out.tfevents*')
 
 hidden_dims = [8, 16, 32, 64, 100, 128]#, 256]#, #200, 256]#, 512]
 styles = ["reformer", "original", "lsh"]
 
 SCALARS_OF_INTEREST = ["train/MEMORY", "train/TIME"]
+nice_name = ["memory per batch (GB)", "time per batch (seconds)"]
+
 
 def get_log_file_path(dims, style):
     log_dir = "save/train/memorytest-{}-{}-01".format(dims, style)
@@ -49,11 +53,11 @@ for style in styles:
             print('exception for {}, {}'.format(style, dims))
     print(scalars)
     for i,scalar in enumerate(scalars):
-        plt.figure(i)
-        plt.plot(np.array(scalars[scalar]), hidden_dims[:len(scalars[scalar])], label=style)
+        plt.figure(num=i, figsize=FIGSIZE)
+        plt.plot(hidden_dims[:len(scalars[scalar])], np.array(scalars[scalar]), label=style)
 for i,scalar in enumerate(SCALARS_OF_INTEREST):
-    plt.figure(num=i, figsize=(4,15))
+    plt.figure(num=i, figsize=FIGSIZE) 
     plt.legend()
-    plt.xlabel(scalar, fontsize=18)
-    plt.ylabel('hidden dimensions', fontsize=16)
+    plt.ylabel(nice_name[i], fontsize=16)
+    plt.xlabel('hidden dimensions', fontsize=16)
     plt.savefig('{}.png'.format(scalar.split("/")[-1]))

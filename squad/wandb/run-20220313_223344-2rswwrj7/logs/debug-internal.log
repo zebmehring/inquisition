@@ -1,0 +1,152 @@
+2022-03-13 22:33:45,014 INFO    MainThread:31755 [internal.py:wandb_internal():95] W&B internal server running at pid: 31755, started at: 2022-03-13 22:33:45.014355
+2022-03-13 22:33:45,017 INFO    WriterThread:31755 [datastore.py:open_for_write():77] open: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/run-2rswwrj7.wandb
+2022-03-13 22:33:45,019 DEBUG   SenderThread:31755 [sender.py:send():235] send: header
+2022-03-13 22:33:45,019 DEBUG   SenderThread:31755 [sender.py:send():235] send: run
+2022-03-13 22:33:45,123 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: check_version
+2022-03-13 22:33:45,124 INFO    SenderThread:31755 [dir_watcher.py:__init__():169] watching files in: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files
+2022-03-13 22:33:45,124 INFO    SenderThread:31755 [sender.py:_start_run_threads():815] run started: 2rswwrj7 with start time 1647210824
+2022-03-13 22:33:45,124 DEBUG   SenderThread:31755 [sender.py:send():235] send: summary
+2022-03-13 22:33:45,125 INFO    SenderThread:31755 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-03-13 22:33:45,125 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: check_version
+2022-03-13 22:33:45,190 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: run_start
+2022-03-13 22:33:46,126 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_created():217] file/dir created: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-summary.json
+2022-03-13 22:33:46,524 DEBUG   HandlerThread:31755 [meta.py:__init__():37] meta init
+2022-03-13 22:33:46,524 DEBUG   HandlerThread:31755 [meta.py:__init__():51] meta init done
+2022-03-13 22:33:46,524 DEBUG   HandlerThread:31755 [meta.py:probe():211] probe
+2022-03-13 22:33:46,530 DEBUG   HandlerThread:31755 [meta.py:_setup_git():201] setup git
+2022-03-13 22:33:46,548 DEBUG   HandlerThread:31755 [meta.py:_setup_git():208] setup git done
+2022-03-13 22:33:46,548 DEBUG   HandlerThread:31755 [meta.py:_save_pip():55] save pip
+2022-03-13 22:33:46,549 DEBUG   HandlerThread:31755 [meta.py:_save_pip():69] save pip done
+2022-03-13 22:33:46,549 DEBUG   HandlerThread:31755 [meta.py:_save_conda():76] save conda
+2022-03-13 22:33:47,130 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_created():217] file/dir created: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/conda-environment.yaml
+2022-03-13 22:33:47,131 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_created():217] file/dir created: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/requirements.txt
+2022-03-13 22:33:48,986 DEBUG   HandlerThread:31755 [meta.py:_save_conda():86] save conda done
+2022-03-13 22:33:48,986 DEBUG   HandlerThread:31755 [meta.py:probe():249] probe done
+2022-03-13 22:33:48,989 DEBUG   SenderThread:31755 [sender.py:send():235] send: files
+2022-03-13 22:33:48,989 INFO    SenderThread:31755 [sender.py:_save_file():947] saving file wandb-metadata.json with policy now
+2022-03-13 22:33:48,995 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: stop_status
+2022-03-13 22:33:48,996 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: stop_status
+2022-03-13 22:33:49,074 DEBUG   SenderThread:31755 [sender.py:send():235] send: telemetry
+2022-03-13 22:33:49,074 DEBUG   SenderThread:31755 [sender.py:send():235] send: telemetry
+2022-03-13 22:33:49,075 DEBUG   SenderThread:31755 [sender.py:send():235] send: run
+2022-03-13 22:33:49,131 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/config.yaml
+2022-03-13 22:33:49,131 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/conda-environment.yaml
+2022-03-13 22:33:49,132 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_created():217] file/dir created: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-metadata.json
+2022-03-13 22:33:49,132 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_created():217] file/dir created: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log
+2022-03-13 22:33:49,172 INFO    SenderThread:31755 [sender.py:send_run():710] updated run: 2rswwrj7
+2022-03-13 22:33:49,506 INFO    Thread-11 :31755 [upload_job.py:push():137] Uploaded file /tmp/tmprciipzb6wandb/27ucgt63-wandb-metadata.json
+2022-03-13 22:33:51,132 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log
+2022-03-13 22:33:52,331 DEBUG   SenderThread:31755 [sender.py:send():235] send: telemetry
+2022-03-13 22:33:52,331 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: partial_history
+2022-03-13 22:33:53,132 INFO    Thread-7  :31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log
+2022-03-13 22:33:54,511 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:54,511 DEBUG   SenderThread:31755 [sender.py:send():235] send: exit
+2022-03-13 22:33:54,511 INFO    SenderThread:31755 [sender.py:send_exit():371] handling exit code: 0
+2022-03-13 22:33:54,512 INFO    SenderThread:31755 [sender.py:send_exit():373] handling runtime: 9
+2022-03-13 22:33:54,512 INFO    SenderThread:31755 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-03-13 22:33:54,513 INFO    SenderThread:31755 [sender.py:send_exit():379] send defer
+2022-03-13 22:33:54,513 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:54,513 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,513 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 0
+2022-03-13 22:33:54,514 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,514 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 0
+2022-03-13 22:33:54,514 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 1
+2022-03-13 22:33:54,514 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,514 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 1
+2022-03-13 22:33:54,611 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,612 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 1
+2022-03-13 22:33:54,612 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 2
+2022-03-13 22:33:54,612 DEBUG   SenderThread:31755 [sender.py:send():235] send: stats
+2022-03-13 22:33:54,613 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,613 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 2
+2022-03-13 22:33:54,613 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,613 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 2
+2022-03-13 22:33:54,613 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 3
+2022-03-13 22:33:54,613 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,613 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 3
+2022-03-13 22:33:54,614 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,614 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 3
+2022-03-13 22:33:54,614 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 4
+2022-03-13 22:33:54,614 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,614 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 4
+2022-03-13 22:33:54,614 DEBUG   SenderThread:31755 [sender.py:send():235] send: summary
+2022-03-13 22:33:54,614 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:54,615 INFO    SenderThread:31755 [sender.py:_save_file():947] saving file wandb-summary.json with policy end
+2022-03-13 22:33:54,615 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,615 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 4
+2022-03-13 22:33:54,615 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 5
+2022-03-13 22:33:54,615 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:54,615 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,616 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 5
+2022-03-13 22:33:54,616 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,616 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 5
+2022-03-13 22:33:54,714 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 6
+2022-03-13 22:33:54,714 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:54,715 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 6
+2022-03-13 22:33:54,715 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:54,715 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 6
+2022-03-13 22:33:54,715 INFO    SenderThread:31755 [dir_watcher.py:finish():283] shutting down directory watcher
+2022-03-13 22:33:54,716 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/config.yaml
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-summary.json
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:_on_file_modified():230] file/dir modified: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:finish():313] scan: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-metadata.json wandb-metadata.json
+2022-03-13 22:33:55,134 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/requirements.txt requirements.txt
+2022-03-13 22:33:55,135 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/config.yaml config.yaml
+2022-03-13 22:33:55,135 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log output.log
+2022-03-13 22:33:55,135 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-summary.json wandb-summary.json
+2022-03-13 22:33:55,135 INFO    SenderThread:31755 [dir_watcher.py:finish():327] scan save: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/conda-environment.yaml conda-environment.yaml
+2022-03-13 22:33:55,142 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 7
+2022-03-13 22:33:55,142 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,149 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:55,149 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 7
+2022-03-13 22:33:55,149 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:55,153 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 7
+2022-03-13 22:33:55,153 INFO    SenderThread:31755 [file_pusher.py:finish():145] shutting down file pusher
+2022-03-13 22:33:55,247 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,247 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,349 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,349 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,451 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,451 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,455 INFO    Thread-12 :31755 [upload_job.py:push():137] Uploaded file /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/requirements.txt
+2022-03-13 22:33:55,460 INFO    Thread-15 :31755 [upload_job.py:push():137] Uploaded file /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/wandb-summary.json
+2022-03-13 22:33:55,474 INFO    Thread-13 :31755 [upload_job.py:push():137] Uploaded file /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/config.yaml
+2022-03-13 22:33:55,552 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,553 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,555 INFO    Thread-16 :31755 [upload_job.py:push():137] Uploaded file /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/conda-environment.yaml
+2022-03-13 22:33:55,560 INFO    Thread-14 :31755 [upload_job.py:push():137] Uploaded file /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/files/output.log
+2022-03-13 22:33:55,654 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,655 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,756 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,756 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,761 INFO    Thread-6  :31755 [sender.py:transition_state():392] send defer: 8
+2022-03-13 22:33:55,761 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:55,761 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 8
+2022-03-13 22:33:55,761 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:55,761 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 8
+2022-03-13 22:33:55,820 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 9
+2022-03-13 22:33:55,821 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:55,821 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 9
+2022-03-13 22:33:55,821 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:55,821 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 9
+2022-03-13 22:33:55,821 INFO    SenderThread:31755 [sender.py:transition_state():392] send defer: 10
+2022-03-13 22:33:55,821 DEBUG   SenderThread:31755 [sender.py:send():235] send: final
+2022-03-13 22:33:55,822 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: defer
+2022-03-13 22:33:55,822 DEBUG   SenderThread:31755 [sender.py:send():235] send: footer
+2022-03-13 22:33:55,822 INFO    HandlerThread:31755 [handler.py:handle_request_defer():164] handle defer: 10
+2022-03-13 22:33:55,822 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: defer
+2022-03-13 22:33:55,822 INFO    SenderThread:31755 [sender.py:send_request_defer():388] handle sender defer: 10
+2022-03-13 22:33:55,858 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: poll_exit
+2022-03-13 22:33:55,858 DEBUG   SenderThread:31755 [sender.py:send_request():249] send_request: poll_exit
+2022-03-13 22:33:55,858 INFO    SenderThread:31755 [file_pusher.py:join():150] waiting for file pusher
+2022-03-13 22:33:56,101 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: sampled_history
+2022-03-13 22:33:56,102 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: get_summary
+2022-03-13 22:33:56,103 DEBUG   HandlerThread:31755 [handler.py:handle_request():141] handle_request: shutdown
+2022-03-13 22:33:56,103 INFO    HandlerThread:31755 [handler.py:finish():778] shutting down handler
+2022-03-13 22:33:56,822 INFO    WriterThread:31755 [datastore.py:close():281] close: /home/ag/inquisition/squad/wandb/run-20220313_223344-2rswwrj7/run-2rswwrj7.wandb
+2022-03-13 22:33:57,000 INFO    SenderThread:31755 [sender.py:finish():1078] shutting down sender
+2022-03-13 22:33:57,000 INFO    SenderThread:31755 [file_pusher.py:finish():145] shutting down file pusher
+2022-03-13 22:33:57,000 INFO    SenderThread:31755 [file_pusher.py:join():150] waiting for file pusher
+2022-03-13 22:33:57,033 INFO    MainThread:31755 [internal.py:handle_exit():82] Internal process exited

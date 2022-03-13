@@ -3,6 +3,8 @@
 Author:
     Chris Chute (chute@stanford.edu)
 """
+import wandb
+
 import time
 import numpy as np
 import random
@@ -116,6 +118,9 @@ def train(log, step, args, train_dataset, train_loader, device, optimizer, model
     epoch = step // len(train_dataset)
     total_memory = 0
     total_time = 0
+    wandb.init()
+    wandb.run.name = "memorytest-{}-{}".format(args.style, args.hidden_size)
+    #wandb.run.id = "memorytest-{}-{}".format(args.style, args.hidden_size)
     while epoch != args.num_epochs:
         epoch += 1
         log.info(f'Starting epoch {epoch}...')

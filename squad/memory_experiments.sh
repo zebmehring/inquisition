@@ -1,7 +1,7 @@
 #!/bin/bash
 #hidden_dims=(8 16 32 64 100 128 140 150 200 256 512)
-#hidden_dims=(8 16 32 64 128 256)
-hidden_dims=(256)
+hidden_dims=(8 16 32 64 128 256)
+#hidden_dims=(256)
 #hidden_dims=(140 150 160 170 180)
 styles=("reformer" "original" "lsh")
 for dims in "${hidden_dims[@]}"
