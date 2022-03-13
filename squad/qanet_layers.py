@@ -14,6 +14,7 @@ from torch.nn.functional import relu
 from torch.nn.functional import softmax
 
 from reformer_pytorch.reformer_pytorch import Reformer
+from reformer_pytorch.reformer_pytorch import LSHSelfAttention
 
 import pdb
 
