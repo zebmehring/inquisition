@@ -1,5 +1,7 @@
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import glob
+import pandas as pd
+
 import numpy as np
 import re
 import os
@@ -19,8 +21,10 @@ regex = re.compile('^events.out.tfevents*')
 hidden_dims = [8, 16, 32, 64, 100, 128]#, 256]#, #200, 256]#, 512]
 styles = ["reformer", "original", "lsh"]
 
-SCALARS_OF_INTEREST = ["train/MEMORY", "train/TIME"]
-nice_name = ["memory per batch (GB)", "time per batch (seconds)"]
+#SCALARS_OF_INTEREST = ["train/MEMORY", "train/TIME"]
+#nice_name = ["memory per batch (GB)", "time per batch (seconds)"]
+SCALARS_OF_INTEREST = ["train/TIME"]
+nice_name = ["time per batch (seconds)"]
 
 
 def get_log_file_path(dims, style):
@@ -35,6 +39,8 @@ def get_log_file_path(dims, style):
             if regex.match(f):
                 return os.path.join(log_dir, f)
     return None
+
+df_dict = dict()
 
 for style in styles:
     scalars = {scalar: list() for scalar in SCALARS_OF_INTEREST}
@@ -55,9 +61,14 @@ for style in styles:
     for i,scalar in enumerate(scalars):
         plt.figure(num=i, figsize=FIGSIZE)
         plt.plot(hidden_dims[:len(scalars[scalar])], np.array(scalars[scalar]), label=style)
+
+    df_dict[style] = scalars[scalar]
 for i,scalar in enumerate(SCALARS_OF_INTEREST):
     plt.figure(num=i, figsize=FIGSIZE) 
     plt.legend()
     plt.ylabel(nice_name[i], fontsize=16)
     plt.xlabel('hidden dimensions', fontsize=16)
     plt.savefig('{}.png'.format(scalar.split("/")[-1]))
+
+df = pd.DataFrame.from_dict(df_dict)
+df.to_csv('time.csv')

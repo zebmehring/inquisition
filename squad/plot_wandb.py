@@ -6,6 +6,7 @@ import os
 import pdb
 import matplotlib.pyplot as plt
 import wandb
+import pandas as pd
 #import argparse
 
 # finish this off later.
@@ -22,8 +23,8 @@ styles = ["reformer", "original", "lsh"]
 api = wandb.Api()
 ENTITY = "andrewgaut"
 PROJECT = "inquisition-squad"
-VALUES = ["system.gpu.0.memoryAllocated"]
-NAMES = ["GPU Memory Allocation (%)"]
+VALUES = ["system.gpu.0.memoryAllocated", "time"]
+NAMES = ["GPU Memory Allocation (%)", "time (s)"]
 
 stored_values = [dict() for _ in range(len(VALUES))] 
 
@@ -36,13 +37,13 @@ for run in runs:
     history = run.history(stream="system")
 
     for i, stored_value in enumerate(stored_values):
+
         if style not in stored_value:
             stored_value[style] = dict()
-        stored_value[style][dims] = history[VALUES[i]][0]
-
-
-
-
+        if VALUES[i] == "time":
+            stored_value[style][dims] = run.summary['_wandb']["runtime"]
+        else:
+            stored_value[style][dims] = history[VALUES[i]][0]
 
 
 for style in styles:
@@ -60,3 +61,10 @@ for i,value in enumerate(VALUES):
     plt.ylabel(NAMES[i], fontsize=16)
     plt.xlabel('hidden dimensions', fontsize=16)
     plt.savefig('{}.png'.format(value.split(".")[-1]))
+
+
+df = pd.DataFrame.from_dict(stored_values[0])
+df.to_csv('test.csv')
+
+df = pd.DataFrame.from_dict(stored_values[1])
+df.to_csv('time.csv')
