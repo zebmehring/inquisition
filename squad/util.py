@@ -97,7 +97,7 @@ class SQuAD(data.Dataset):
         return len(self.valid_idxs)
 
 
-def collate_fn(examples, max_question_seqlen=None, max_context_seqlen=None):
+def collate_fn(max_seq_len, examples, max_question_seqlen=None, max_context_seqlen=None):
     """Create batch tensors from a list of individual examples returned
     by `SQuAD.__getitem__`. Merge examples of different length by padding
     all examples to the maximum length in the batch.
@@ -133,26 +133,16 @@ def collate_fn(examples, max_question_seqlen=None, max_context_seqlen=None):
     # padded to the max seq len overall
     def merge_1d(arrays, dtype=torch.int64, pad_value=0):
         lengths = [(a != pad_value).sum() for a in arrays]
-        #print("max(lengths): {}".format(max(lengths)))
-        max_seq_len = max_seq_len_bucket_multiple(lengths)
-        #print("max_seq_len_bucket_multiple: {}".format(max_seq_len))
-        padded = torch.zeros(len(arrays), 448, dtype=dtype)
+        padded = torch.zeros(len(arrays), max_seq_len, dtype=dtype)
         for i, seq in enumerate(arrays):
             end = lengths[i]
-            end = (seq != pad_value).sum()
-            #print(seq.shape)
-            #print(end)
-            #print(padded[i, :end].shape)
             padded[i, :end] = seq[:end]
         return padded
 
     def merge_2d(matrices, dtype=torch.int64, pad_value=0):
         heights = [(m.sum(1) != pad_value).sum() for m in matrices]
         widths = [(m.sum(0) != pad_value).sum() for m in matrices]
-        #print("max(heights): {}".format(max(heights)))
-        max_seq_len = max_seq_len_bucket_multiple(heights)
-        #print("max_height_bucket: {}".format(max_seq_len))
-        padded = torch.zeros(len(matrices), 448, max(widths), dtype=dtype)
+        padded = torch.zeros(len(matrices), max_seq_len, max(widths), dtype=dtype)
         for i, seq in enumerate(matrices):
             height, width = heights[i], widths[i]
             height = (seq.sum(1) != pad_value).sum()
