@@ -27,17 +27,19 @@ subspans = 0
 for uuid, prediction in predictions.items():
     if not prediction and not goldens[uuid]:
         continue
+    elif prediction in goldens[uuid]:
+        continue
     total_incorrect += 1
     if not prediction or not goldens[uuid]:
         empty_golden_nonempty_prediction += 1 if prediction and not goldens[uuid] else 0
         empty_prediction_nonempty_golden += 1 if goldens[uuid] and not prediction else 0
-        continue
-    if prediction not in goldens[uuid]:
+    else:
         bad_guess += 1
+        error = 'bad guess'
         if any(prediction in golden or golden in prediction for golden in goldens[uuid]):
             subspans += 1
         else:
-            print(f'incorrect prediction \'{prediction}\', '
+            print(f'{error} prediction \'{prediction}\', '
                   f'expected one of {goldens[uuid]}')
 
 print('')
